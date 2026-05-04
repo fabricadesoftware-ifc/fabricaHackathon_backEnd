@@ -3,9 +3,8 @@ from ..models import TipoEdicao
 
 class TipoEdicaoSerializer(ModelSerializer):
     class Meta:
-
         model = TipoEdicao
-        fields = list[str] = [
+        fields = [
 "id",
 "nome"
 ]
