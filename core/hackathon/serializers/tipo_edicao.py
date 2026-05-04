@@ -5,4 +5,7 @@ class TipoEdicaoSerializer(ModelSerializer):
     class Meta:
 
         model = TipoEdicao
-        fields = "__all__"
+        fields = list[str] = [
+"id",
+"nome"
+]
