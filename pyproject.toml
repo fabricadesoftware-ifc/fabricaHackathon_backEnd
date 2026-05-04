@@ -1,0 +1,19 @@
+[project]
+name = "fabricaHackathon_backEnd"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Jaotarzan", email = "joaovssouza59@gmail.com"},
+]
+dependencies = ["django>=6.0.4", "djangorestframework>=3.17.1"]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
