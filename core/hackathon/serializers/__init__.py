@@ -1,3 +1,3 @@
 from .tipo_edicao import TipoEdicaoSerializer
-
-__all__ = [TipoEdicaoSerializer]
+from .tipo_user import TipoUserSerializer
+__all__ = [TipoEdicaoSerializer, TipoUserSerializer]

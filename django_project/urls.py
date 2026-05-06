@@ -19,13 +19,15 @@ from django.urls import include, path
 
 from rest_framework.routers import DefaultRouter
 from core.hackathon.views import TipoEdicaoViewSet
-
+from core.hackathon.views import TipoUserViewSet
 
 router = DefaultRouter()
 router.register(r"tipos", TipoEdicaoViewSet)
+router.register(r"tipos_user", TipoUserViewSet)
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(router.urls))
+    
 ]

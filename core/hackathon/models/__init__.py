@@ -1,3 +1,3 @@
 from .tipo_edicao import TipoEdicao
-
-__all__ = [TipoEdicao]
+from .tipo_user import TipoUser
+__all__ = [TipoEdicao, TipoUser]
