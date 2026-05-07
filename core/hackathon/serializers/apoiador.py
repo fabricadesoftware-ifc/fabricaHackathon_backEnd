@@ -5,7 +5,7 @@ from ..models import Apoiador
 class ApoiadorSerializer(ModelSerializer):
     class Meta: 
         model = Apoiador
-        fields = '__all__'
+        fields = ['nome', 'tipo']
 
 class ApoiadorListSerializer(ModelSerializer):
     class Meta: 
