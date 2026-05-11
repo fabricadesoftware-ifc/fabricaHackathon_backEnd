@@ -1,5 +1,8 @@
 from django.contrib import admin
+from .models import Apoiador 
+
+admin.site.register(Apoiador)
 from .models import TipoEdicao
-# Register your models here.
+
 
 admin.site.register(TipoEdicao)
