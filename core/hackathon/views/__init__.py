@@ -1,6 +1,9 @@
 from .apoiador import ApoiadorViewSet
-
-__all__ = [ApoiadorViewSet]
 from .tipo_edicao import TipoEdicaoViewSet
+from .tipo_user import TipoUserViewSet
 
-__all__ = [TipoEdicaoViewSet]
+__all__ = [
+    "ApoiadorViewSet",
+    "TipoEdicaoViewSet",
+    "TipoUserViewSet",
+]

@@ -1,6 +1,10 @@
 from .apoiador import ApoiadorSerializer, ApoiadorListSerializer
-
-__all__ = [ApoiadorSerializer, ApoiadorListSerializer]
 from .tipo_edicao import TipoEdicaoSerializer
+from .tipo_user import TipoUserSerializer
 
-__all__ = [TipoEdicaoSerializer]
+__all__ = [
+    "ApoiadorSerializer",
+    "ApoiadorListSerializer",
+    "TipoEdicaoSerializer",
+    "TipoUserSerializer",
+]
