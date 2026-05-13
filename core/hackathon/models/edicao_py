@@ -1,0 +1,23 @@
+from django.db import models
+from tipo_edicao import TipoEdicao
+from apoiador import Apoiador
+class Edicao(models.Model):
+    STATUS_CHOICES = [
+        ('inscricao', 'Inscrição'),
+        ('emAndamento', 'Em andamento'),
+        ('avaliacao', 'Avaliação'),
+        ('finalizado', 'Finalizado')
+    ]
+    nome = models.CharField(null=False, blank=False, max_length=100)
+    ano = models.PositiveIntegerField(null=False, blank=False)
+    descricao = models.CharField(blank=True, null=True)
+    status = models.CharField(choices=STATUS_CHOICES, blank=False, null=False, default=STATUS_CHOICES[0])
+    data_inicio = models.DateField(null=False, blank=False)
+    data_fim = models.DateField(null=False, blank=False)
+    minimo_participantes = models.PositiveIntegerField(null=False, blank=False)
+    maximo_participantes = models.PositiveIntegerField(null=False, blank=False)
+    tipo_edicao = models.ForeignKey(TipoEdicao, on_delete=models.PROTECT, related_name="Edição")
+    apoiadores = models.ManyToManyField(Apoiador, related_name="Edição")
+
+    class Meta:
+        verbose_name_plural = "Tipo de Edições"
