@@ -3,7 +3,7 @@ from django.db import models
 from .tipo_edicao import TipoEdicao
 from .apoiador import Apoiador
 from django.core.exceptions import ValidationError
-from ..utils.validators.edicaoValidator import validar_edicao
+
 class Edicao(models.Model):
     
     STATUS_CHOICES = [
@@ -26,14 +26,11 @@ class Edicao(models.Model):
     maximo_participantes = models.PositiveIntegerField(null=False, blank=False)
     maximo_equipes = models.PositiveIntegerField(null=False, blank=False)
     
-    tipo_edicao = models.ForeignKey(TipoEdicao, on_delete=models.PROTECT, related_name="Edições")
-    apoiadores = models.ManyToManyField(Apoiador, related_name="Edições", blank=True)
+    tipo_edicao = models.ForeignKey(TipoEdicao, on_delete=models.PROTECT, related_name="edicoes")
+    apoiadores = models.ManyToManyField(Apoiador, related_name="edicoes", blank=True)
 
     class Meta:
         verbose_name_plural = "Edições"
 
     def __str__(self):
         return f"{self.nome} - {self.ano}"    
-    
-    def clean(self):
-        validar_edicao(self)    
