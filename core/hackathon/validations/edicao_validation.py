@@ -7,8 +7,9 @@ def validate_edicao(data):
     inicio = data.get("data_inicio")
     fim = data.get("data_fim")
 
-    if inicio and fim and fim <= inicio:
-        errors["data_fim"] = "A data de fim deve ser maior que a data de início."
+    if inicio is not None and fim is not None:
+        if fim <= inicio:
+            errors["data_fim"] = "A data de fim deve ser maior que a data de início."
 
     min_p = data.get("minimo_participantes")
     max_p = data.get("maximo_participantes")
@@ -20,8 +21,10 @@ def validate_edicao(data):
             )
 
     max_eq = data.get("maximo_equipes")
-    if max_eq is not None and max_eq <= 0:
-        errors["maximo_equipes"] = "Deve ser maior que zero."
+    
+    if max_eq is not None:
+        if max_eq <= 0:
+            errors["maximo_equipes"] = "Deve ser maior que zero."
 
     if errors:
         raise serializers.ValidationError(errors)
