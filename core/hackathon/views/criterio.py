@@ -6,5 +6,3 @@ from ..serializers import CriterioSerializer
 class CriterioViewSet(ModelViewSet):
     queryset = Criterio.objects.all()
     serializer_class = CriterioSerializer
-    # Validação de 
-    permission_classes = [IsAdminUser]

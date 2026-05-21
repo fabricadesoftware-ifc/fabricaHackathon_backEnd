@@ -5,7 +5,7 @@ class CriterioSerializer(ModelSerializer):
     class Meta:
         model = Criterio
         fields = [
-"id",
-"nome",
-"edicao",
-]
+                    "id",
+                    "nome",
+                    "edicao",
+                ]
