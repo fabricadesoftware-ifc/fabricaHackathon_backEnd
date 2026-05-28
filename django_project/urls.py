@@ -7,13 +7,13 @@ from core.hackathon.views import (
     TipoEdicaoViewSet,
     TipoUserViewSet,
     EdicaoViewSet,
-    CriterioViewSet
+    CriterioViewSet,
     TemaViewSet,
 )
 
 router = DefaultRouter()
 router.register(r'apoiadores', ApoiadorViewSet)
-router.register(r'tipos', TipoEdicaoViewSet)
+router.register(r'tipos-edicao', TipoEdicaoViewSet)
 router.register(r'tipos-user', TipoUserViewSet)
 router.register(r'edicoes', EdicaoViewSet)
 router.register(r'criterios', CriterioViewSet)
