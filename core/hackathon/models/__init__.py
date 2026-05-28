@@ -3,10 +3,13 @@ from .tipo_edicao import TipoEdicao
 from .tipo_user import TipoUser
 from .edicao import Edicao
 from .criterio import Criterio
+from .tema import Tema
+
 __all__ = [
     "Apoiador",
     "TipoEdicao",
     "TipoUser",
     "Edicao",
     "Criterio",
+    "Tema",
 ]
