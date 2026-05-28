@@ -1,7 +1,10 @@
 from rest_framework import serializers
 from ..models import Edicao
 from ..validations.edicao_validation import validate_edicao
+from ..serializers import ApoiadorListSerializer
 class EdicaoSerializer(serializers.ModelSerializer):
+    apoiadores = ApoiadorListSerializer(many=True, read_only=True)
+
     class Meta:
         model = Edicao
         fields = [
