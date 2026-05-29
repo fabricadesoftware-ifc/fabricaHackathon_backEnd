@@ -4,6 +4,7 @@ from .tipo_user import TipoUser
 from .edicao import Edicao
 from .criterio import Criterio
 from .tema import Tema
+from .projeto import Projeto
 
 __all__ = [
     "Apoiador",
@@ -12,4 +13,5 @@ __all__ = [
     "Edicao",
     "Criterio",
     "Tema",
+    "Projeto",
 ]
