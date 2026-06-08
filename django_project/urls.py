@@ -9,6 +9,7 @@ from core.hackathon.views import (
     EdicaoViewSet,
     CriterioViewSet,
     TemaViewSet,
+    ProjetoViewSet,
 )
 
 router = DefaultRouter()
@@ -18,6 +19,7 @@ router.register(r'tipos-user', TipoUserViewSet)
 router.register(r'edicoes', EdicaoViewSet)
 router.register(r'criterios', CriterioViewSet)
 router.register(r'temas', TemaViewSet)
+router.register(r'projetos', ProjetoViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),

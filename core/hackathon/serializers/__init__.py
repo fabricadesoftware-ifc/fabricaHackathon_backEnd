@@ -4,6 +4,7 @@ from .tipo_user import TipoUserSerializer
 from .edicao import EdicaoSerializer, EdicaoListSerializer
 from .criterio import CriterioSerializer
 from .tema import TemaSerializer
+from .projeto import ProjetoListSerializer, ProjetoSerializer
 
 __all__ = [
     "ApoiadorSerializer",
@@ -14,4 +15,6 @@ __all__ = [
     "EdicaoListSerializer",
     "CriterioSerializer",
     "TemaSerializer",
+    "ProjetoListSerializer", 
+    "ProjetoSerializer",
 ]
