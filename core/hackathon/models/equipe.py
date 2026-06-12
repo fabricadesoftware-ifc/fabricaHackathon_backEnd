@@ -2,7 +2,7 @@ from django.db import models
 from .edicao import Edicao
 from .projeto import Projeto
 from .tema import Tema
-class Equipes(models.Model):
+class Equipe(models.Model):
     nome_equipe = models.CharField(null=False, blank=False, max_length=50)
     edicao = models.ForeignKey(Edicao, on_delete=models.PROTECT, related_name='equipes',blank=False, null=False)
     tema = models.ForeignKey(Tema, on_delete=models.PROTECT, related_name="equipes", blank=False, null=False)
@@ -13,3 +13,4 @@ class Equipes(models.Model):
 
     class Meta:
         verbose_name_plural = "Equipes"
+        unique_together = ('nome_equipe', 'edicao')
