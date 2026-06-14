@@ -5,7 +5,7 @@ from ..models import Equipe
 class EquipeSerializer(ModelSerializer):
     class Meta: 
         model = Equipe
-        fields = ['id', 'nome_equipe', 'tema', 'projeto']
+        fields = ['id', 'nome_equipe', 'edicao', 'tema', 'projeto']
 
 class EquipeListSerializer(ModelSerializer):
     class Meta: 

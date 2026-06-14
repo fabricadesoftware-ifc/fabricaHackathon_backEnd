@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:8dcd6691227f945d1422ee1ccb74822c1fcd289fbc6c90dabe430fe145257721"
+content_hash = "sha256:55c42aa971c1b02326700fef712e0bef4d34a59cf37a1e6c4444474969455222"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
@@ -26,7 +26,7 @@ files = [
 
 [[package]]
 name = "django"
-version = "6.0.4"
+version = "6.0.6"
 requires_python = ">=3.12"
 summary = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 groups = ["default"]
@@ -36,8 +36,8 @@ dependencies = [
     "tzdata; sys_platform == \"win32\"",
 ]
 files = [
-    {file = "django-6.0.4-py3-none-any.whl", hash = "sha256:14359c809fc16e8f81fd2b59d7d348e4d2d799da6840b10522b6edf7b8afc1da"},
-    {file = "django-6.0.4.tar.gz", hash = "sha256:8cfa2572b3f2768b2e84983cf3c4811877a01edb64e817986ec5d60751c113ac"},
+    {file = "django-6.0.6-py3-none-any.whl", hash = "sha256:25148b1194c47c2e685e5f5e9c5d59c78b075dfd282cb9618861ba6c1708f4d2"},
+    {file = "django-6.0.6.tar.gz", hash = "sha256:ad03916ba59523d781ae5c3f631960c23d69a9d9c43cecda52fc23b47e953713"},
 ]
 
 [[package]]
