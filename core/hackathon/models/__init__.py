@@ -5,6 +5,7 @@ from .edicao import Edicao
 from .criterio import Criterio
 from .tema import Tema
 from .projeto import Projeto
+from .equipe import Equipe
 from .nota import Nota
 __all__ = [
     "Apoiador",
@@ -14,5 +15,6 @@ __all__ = [
     "Criterio",
     "Tema",
     "Projeto",
+    "Equipe"
     "Nota",
 ]

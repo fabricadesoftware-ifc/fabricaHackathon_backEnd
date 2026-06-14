@@ -5,6 +5,8 @@ from .edicao import EdicaoSerializer, EdicaoListSerializer
 from .criterio import CriterioSerializer
 from .tema import TemaSerializer
 from .projeto import ProjetoListSerializer, ProjetoSerializer
+from .equipe import EquipeListSerializer, EquipeSerializer
+
 from .nota import NotaSerializer, NotaListSerializer
 __all__ = [
     "ApoiadorSerializer",
@@ -17,6 +19,8 @@ __all__ = [
     "TemaSerializer",
     "ProjetoListSerializer", 
     "ProjetoSerializer",
+    "EquipeListSerializer",
+    "EquipeSerializer"
     "NotaSerializer",
     "NotaListSerializer",
 ]
