@@ -5,7 +5,7 @@ from .edicao import Edicao
 from .criterio import Criterio
 from .tema import Tema
 from .projeto import Projeto
-
+from .nota import Nota
 __all__ = [
     "Apoiador",
     "TipoEdicao",
@@ -14,4 +14,5 @@ __all__ = [
     "Criterio",
     "Tema",
     "Projeto",
+    "Nota",
 ]
