@@ -8,7 +8,6 @@ class Projeto(models.Model):
     link_deploy_projeto = models.URLField(blank=True, null=True)
     notaFinal_projeto = models.IntegerField(blank=True, null=True)
     edicao = models.ForeignKey(Edicao, on_delete=models.PROTECT, related_name="projetos", blank=False, null=False)
-    tema = models.ForeignKey(Tema, on_delete=models.PROTECT, related_name="projetos", blank=False, null=False)
 
     def __str__(self):
         return f'{self.nome_projeto} - {self.link_deploy_projeto}'

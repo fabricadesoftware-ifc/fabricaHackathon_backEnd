@@ -10,8 +10,7 @@ class ProjetoSerializer(ModelSerializer):
             "descricao_projeto",
             "link_deploy_projeto",
             "notaFinal_projeto",
-            "edicao",
-            "tema",
+            "edicao"
         ]
 
 class ProjetoListSerializer(ModelSerializer):
@@ -21,6 +20,5 @@ class ProjetoListSerializer(ModelSerializer):
             "id",
             "nome_projeto",
             "notaFinal_projeto",
-            "edicao",
-            "tema",
+            "edicao"
         ]
