@@ -1,12 +1,12 @@
 from rest_framework.serializers import ModelSerializer
-from ..models import participanteEquipe
+from ..models import ParticipanteEquipe
 
 class ParticipanteEquipeSerializer(ModelSerializer):
     class Meta:
-        model = participanteEquipe
+        model = ParticipanteEquipe
         fields = ['user', 'equipe']
 
 class ParticipanteEquipeListSerializer(ModelSerializer):
     class Meta:
-        model = participanteEquipe
+        model = ParticipanteEquipe
         fields = ['id', 'user', 'equipe']
