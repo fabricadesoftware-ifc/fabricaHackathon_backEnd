@@ -26,4 +26,5 @@ __all__ = [
     "EquipeSerializer",
     "NotaSerializer",
     "NotaListSerializer",
+    "ParticipanteEquipeSerializer"
 ]

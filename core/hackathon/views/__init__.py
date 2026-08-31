@@ -19,4 +19,5 @@ __all__ = [
     "ProjetoViewSet",
     "EquipeViewSet",
     "NotaViewSet",
+    "ParticipanteEquipeViewSet"
 ]

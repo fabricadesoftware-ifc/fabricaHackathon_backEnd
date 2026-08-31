@@ -19,4 +19,5 @@ __all__ = [
     "Projeto",
     "Equipe",
     "Nota",
+    "ParticipanteEquipe"
 ]
