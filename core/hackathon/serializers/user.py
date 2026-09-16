@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ['id', 'auth_user', 'auth_user_id', 'nome_user', 'tipoUser']
 
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
