@@ -1,6 +1,5 @@
 from .apoiador import ApoiadorViewSet
 from .tipo_edicao import TipoEdicaoViewSet
-from .tipo_user import TipoUserViewSet
 from .user import UserViewSet
 from .edicao import EdicaoViewSet
 from .criterio import CriterioViewSet
@@ -12,7 +11,6 @@ from .participanteEquipe import ParticipanteEquipeViewSet
 __all__ = [
     "ApoiadorViewSet",
     "TipoEdicaoViewSet",
-    "TipoUserViewSet",
     "UserViewSet",
     "EdicaoViewSet",
     "CriterioViewSet",
