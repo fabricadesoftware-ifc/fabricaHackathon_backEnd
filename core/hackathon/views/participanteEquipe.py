@@ -1,6 +1,6 @@
 from rest_framework.viewsets import ModelViewSet
-from ..models import participanteEquipearticipanteEquipe
-from ..serializers import ParticipanteEquipeSerializer
+from ..models import participanteEquipe
+from ..serializers import ParticipanteEquipeSerializer, ParticipanteEquipeListSerializer
 
 class ParticipanteEquipeViewSet(ModelViewSet):
     queryset = participanteEquipe.objects.all()
