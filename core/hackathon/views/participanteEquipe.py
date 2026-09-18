@@ -1,9 +1,9 @@
 from rest_framework.viewsets import ModelViewSet
-from ..models import participanteEquipe
+from ..models import ParticipanteEquipe
 from ..serializers import ParticipanteEquipeSerializer, ParticipanteEquipeListSerializer
 
 class ParticipanteEquipeViewSet(ModelViewSet):
-    queryset = participanteEquipe.objects.all()
+    queryset = ParticipanteEquipe.objects.all()
     serializer_class = ParticipanteEquipeSerializer
 
     def get_serializer_class(self):

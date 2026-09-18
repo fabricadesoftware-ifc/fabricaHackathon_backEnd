@@ -5,7 +5,6 @@ from rest_framework.routers import DefaultRouter
 from core.hackathon.views import (
     ApoiadorViewSet,
     TipoEdicaoViewSet,
-    TipoUserViewSet,
     UserViewSet,
     EdicaoViewSet,
     CriterioViewSet,
@@ -19,7 +18,6 @@ from core.hackathon.views import (
 router = DefaultRouter()
 router.register(r'apoiadores', ApoiadorViewSet)
 router.register(r'tipos-edicao', TipoEdicaoViewSet)
-router.register(r'tipos-user', TipoUserViewSet)
 router.register(r'users', UserViewSet)
 router.register(r'edicoes', EdicaoViewSet)
 router.register(r'criterios', CriterioViewSet)

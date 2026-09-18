@@ -1,9 +1,8 @@
 from django.contrib import admin
-from .models import Apoiador, TipoEdicao, TipoUser, User, Edicao, Criterio, Tema, Projeto, Equipe, Nota, ParticipanteEquipe
+from .models import Apoiador, TipoEdicao, User, Edicao, Criterio, Tema, Projeto, Equipe, Nota, ParticipanteEquipe
 
 admin.site.register(Apoiador)
 admin.site.register(TipoEdicao)
-admin.site.register(TipoUser)
 admin.site.register(User)
 admin.site.register(Edicao)
 admin.site.register(Criterio)
