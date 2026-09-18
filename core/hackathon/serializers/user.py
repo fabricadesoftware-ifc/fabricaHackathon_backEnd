@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User as AuthUser
 from ..models import User
+from ..validations.user_validation import validate_user_tipo
 
 class AuthUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,7 +16,15 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'auth_user', 'auth_user_id', 'nome_user', 'tipoUser']
+        fields = ['id', 'auth_user', 'auth_user_id', 'nome_user', 'email_user', 'tipoUser']
+
+    def validate_tipoUser(self, value):
+        request = self.context.get('request')
+        request_user = None
+        if request:
+            request_user = getattr(request, 'user', None) or getattr(request, '_force_auth_user', None)
+        validate_user_tipo(value, request_user)
+        return value
 
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
