@@ -11,10 +11,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_project.settings')
 django.setup()
 
-from django.contrib.auth.models import User as AuthUser
 from core.hackathon.models import (
-    TipoEdicao, Apoiador, TipoUser, User, Edicao, Criterio, Tema, Projeto, Equipe, Nota
+    TipoEdicao, Apoiador, User, Edicao, Criterio, Tema, Projeto, Equipe, Nota
 )
+from core.hackathon.models.user import tipoUser
 
 def populate():
     print("Iniciando a população do banco de dados...")
@@ -31,13 +31,7 @@ def populate():
     apoiador2, _ = Apoiador.objects.get_or_create(nome='DevStart', defaults={'tipo': 'prata'})
     apoiador3, _ = Apoiador.objects.get_or_create(nome='InovaBank', defaults={'tipo': 'diamante'})
 
-    # 3. TipoUser
-    print("Criando TipoUser...")
-    tipo_participante, _ = TipoUser.objects.get_or_create(nome='Participante')
-    tipo_avaliador, _ = TipoUser.objects.get_or_create(nome='Avaliador')
-    tipo_organizador, _ = TipoUser.objects.get_or_create(nome='Organizador')
-
-    # 4. Edicao
+    # 3. Edicao
     print("Criando Edicao...")
     edicao_2024, created = Edicao.objects.get_or_create(
         nome='Hackathon Inovação 2024',
@@ -56,38 +50,44 @@ def populate():
     if created:
         edicao_2024.apoiadores.add(apoiador1, apoiador3)
 
-    # 5. Criterio
+    # 4. Criterio
     print("Criando Criterios...")
     criterio_inovacao, _ = Criterio.objects.get_or_create(nome='Inovação', edicao=edicao_2024)
     criterio_usabilidade, _ = Criterio.objects.get_or_create(nome='Usabilidade', edicao=edicao_2024)
     criterio_impacto, _ = Criterio.objects.get_or_create(nome='Impacto Social', edicao=edicao_2024)
 
-    # 6. Tema
+    # 5. Tema
     print("Criando Temas...")
     tema_saude, _ = Tema.objects.get_or_create(descricao_tema='Saúde e Bem-estar', edicao=edicao_2024)
     tema_educacao, _ = Tema.objects.get_or_create(descricao_tema='Educação do Futuro', edicao=edicao_2024)
 
-    # 7. Users
+    # 6. Users
     print("Criando Users...")
-    auth_user1, _ = AuthUser.objects.get_or_create(username='joao', defaults={'email': 'joao@example.com'})
-    if not auth_user1.has_usable_password():
-        auth_user1.set_password('123456')
-        auth_user1.save()
-        
     user1, _ = User.objects.get_or_create(
-        auth_user=auth_user1,
-        defaults={'nome_user': 'João Silva', 'email_user': 'joao@example.com', 'tipoUser': tipo_participante}
+        username='joao',
+        defaults={
+            'nome_user': 'João Silva',
+            'email_user': 'joao@example.com',
+            'email': 'joao@example.com',
+            'tipoUser': tipoUser.participante
+        }
     )
+    if not user1.has_usable_password():
+        user1.set_password('123456')
+        user1.save()
 
-    auth_user2, _ = AuthUser.objects.get_or_create(username='maria', defaults={'email': 'maria@example.com'})
-    if not auth_user2.has_usable_password():
-        auth_user2.set_password('123456')
-        auth_user2.save()
-        
     user2, _ = User.objects.get_or_create(
-        auth_user=auth_user2,
-        defaults={'nome_user': 'Maria Souza', 'email_user': 'maria@example.com', 'tipoUser': tipo_avaliador}
+        username='maria',
+        defaults={
+            'nome_user': 'Maria Souza',
+            'email_user': 'maria@example.com',
+            'email': 'maria@example.com',
+            'tipoUser': tipoUser.avaliador
+        }
     )
+    if not user2.has_usable_password():
+        user2.set_password('123456')
+        user2.save()
 
     # 8. Projeto
     print("Criando Projetos...")
