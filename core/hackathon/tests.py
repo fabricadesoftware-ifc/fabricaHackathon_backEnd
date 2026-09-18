@@ -31,8 +31,7 @@ class UserAbstractUserValidationTests(TestCase):
         self.user_participante = User.objects.create_user(
             username='participante',
             email='participante@test.com',
-            email_user='participante@test.com',
-            nome_user='Participante Teste',
+            first_name='Participante Teste',
             password='password123',
             tipoUser=tipoUser.participante
         )
@@ -41,8 +40,7 @@ class UserAbstractUserValidationTests(TestCase):
         self.user_admin = User.objects.create_superuser(
             username='admin',
             email='admin@test.com',
-            email_user='admin@test.com',
-            nome_user='Admin Teste',
+            first_name='Admin Teste',
             password='password123',
             tipoUser=tipoUser.admin
         )
@@ -51,8 +49,7 @@ class UserAbstractUserValidationTests(TestCase):
         self.user_avaliador = User.objects.create_user(
             username='avaliador',
             email='avaliador@test.com',
-            email_user='avaliador@test.com',
-            nome_user='Avaliador Teste',
+            first_name='Avaliador Teste',
             password='password123',
             tipoUser=tipoUser.avaliador
         )
@@ -60,8 +57,8 @@ class UserAbstractUserValidationTests(TestCase):
     def test_anonymous_cannot_set_admin(self):
         data = {
             'username': 'novouser',
-            'nome_user': 'Novo User',
-            'email_user': 'novouser@test.com',
+            'first_name': 'Novo User',
+            'email': 'novouser@test.com',
             'tipoUser': tipoUser.admin,
             'password': 'password123'
         }
@@ -72,8 +69,8 @@ class UserAbstractUserValidationTests(TestCase):
     def test_anonymous_cannot_set_avaliador(self):
         data = {
             'username': 'novouser',
-            'nome_user': 'Novo User',
-            'email_user': 'novouser@test.com',
+            'first_name': 'Novo User',
+            'email': 'novouser@test.com',
             'tipoUser': tipoUser.avaliador,
             'password': 'password123'
         }
@@ -87,8 +84,8 @@ class UserAbstractUserValidationTests(TestCase):
 
         data = {
             'username': 'novouser',
-            'nome_user': 'Novo User',
-            'email_user': 'novouser@test.com',
+            'first_name': 'Novo User',
+            'email': 'novouser@test.com',
             'tipoUser': tipoUser.admin,
             'password': 'password123'
         }
@@ -102,8 +99,8 @@ class UserAbstractUserValidationTests(TestCase):
 
         data = {
             'username': 'novouser',
-            'nome_user': 'Novo User',
-            'email_user': 'novouser@test.com',
+            'first_name': 'Novo User',
+            'email': 'novouser@test.com',
             'tipoUser': tipoUser.avaliador,
             'password': 'password123'
         }
@@ -117,8 +114,8 @@ class UserAbstractUserValidationTests(TestCase):
 
         data = {
             'username': 'novoparticipante',
-            'nome_user': 'Novo Participante',
-            'email_user': 'novoparticipante@test.com',
+            'first_name': 'Novo Participante',
+            'email': 'novoparticipante@test.com',
             'tipoUser': tipoUser.participante,
             'password': 'password123'
         }
@@ -135,8 +132,8 @@ class UserAbstractUserValidationTests(TestCase):
         # Criando como avaliador
         data_avaliador = {
             'username': 'novoavaliador',
-            'nome_user': 'Novo Avaliador',
-            'email_user': 'novoavaliador@test.com',
+            'first_name': 'Novo Avaliador',
+            'email': 'novoavaliador@test.com',
             'tipoUser': tipoUser.avaliador,
             'password': 'password123'
         }
@@ -148,8 +145,8 @@ class UserAbstractUserValidationTests(TestCase):
         # Criando como admin
         data_admin = {
             'username': 'novoadmin',
-            'nome_user': 'Novo Admin',
-            'email_user': 'novoadmin@test.com',
+            'first_name': 'Novo Admin',
+            'email': 'novoadmin@test.com',
             'tipoUser': tipoUser.admin,
             'password': 'password123'
         }
@@ -162,8 +159,8 @@ class UserAbstractUserValidationTests(TestCase):
         view = UserViewSet.as_view({'post': 'create'})
         request = self.factory.post('/api/users/', {
             'username': 'hacker',
-            'nome_user': 'Hacker',
-            'email_user': 'hacker@test.com',
+            'first_name': 'Hacker',
+            'email': 'hacker@test.com',
             'tipoUser': tipoUser.admin,
             'password': 'password123'
         }, format='json')
@@ -182,24 +179,21 @@ class ParticipanteEquipeValidationTests(TestCase):
         self.user_participante = User.objects.create_user(
             username='participante1',
             email='p1@test.com',
-            email_user='p1@test.com',
-            nome_user='Participante 1',
+            first_name='Participante 1',
             password='password123',
             tipoUser=tipoUser.participante
         )
         self.user_avaliador = User.objects.create_user(
             username='avaliador1',
             email='av1@test.com',
-            email_user='av1@test.com',
-            nome_user='Avaliador 1',
+            first_name='Avaliador 1',
             password='password123',
             tipoUser=tipoUser.avaliador
         )
         self.user_admin = User.objects.create_superuser(
             username='admin1',
             email='adm1@test.com',
-            email_user='adm1@test.com',
-            nome_user='Admin 1',
+            first_name='Admin 1',
             password='password123',
             tipoUser=tipoUser.admin
         )
@@ -278,6 +272,117 @@ class ParticipanteEquipeValidationTests(TestCase):
         request = self.factory.post('/api/participantes-equipe/', {
             'user': self.user_avaliador.id,
             'equipe': self.equipe.id
+        }, format='json')
+        force_authenticate(request, user=self.user_participante)
+
+        response = view(request)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('user', response.data)
+
+    def test_user_cannot_join_two_teams_in_same_edicao_serializer(self):
+        ParticipanteEquipe.objects.create(user=self.user_participante, equipe=self.equipe)
+
+        projeto2 = Projeto.objects.create(
+            nome_projeto='Projeto Beta',
+            edicao=self.edicao,
+            link_deploy_projeto='https://beta.example.com'
+        )
+        equipe2 = Equipe.objects.create(
+            nome_equipe='Equipe Beta',
+            edicao=self.edicao,
+            tema=self.tema,
+            projeto=projeto2
+        )
+
+        data = {
+            'user': self.user_participante.id,
+            'equipe': equipe2.id
+        }
+        serializer = ParticipanteEquipeSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('user', serializer.errors)
+        self.assertIn('já faz parte da equipe', str(serializer.errors['user']))
+
+    def test_user_can_join_team_in_different_edicao_serializer(self):
+        ParticipanteEquipe.objects.create(user=self.user_participante, equipe=self.equipe)
+
+        edicao2027 = Edicao.objects.create(
+            nome='Hackathon 2027',
+            ano=2027,
+            status='INSCRICAO',
+            data_inicio=date.today() + timedelta(days=365),
+            data_fim=date.today() + timedelta(days=368),
+            minimo_participantes=2,
+            maximo_participantes=5,
+            maximo_equipes=10,
+            tipo_edicao=self.tipo_edicao
+        )
+        tema2027 = Tema.objects.create(
+            descricao_tema='Sustentabilidade',
+            edicao=edicao2027
+        )
+        projeto2027 = Projeto.objects.create(
+            nome_projeto='Projeto 2027',
+            edicao=edicao2027,
+            link_deploy_projeto='https://2027.example.com'
+        )
+        equipe2027 = Equipe.objects.create(
+            nome_equipe='Equipe 2027',
+            edicao=edicao2027,
+            tema=tema2027,
+            projeto=projeto2027
+        )
+
+        data = {
+            'user': self.user_participante.id,
+            'equipe': equipe2027.id
+        }
+        serializer = ParticipanteEquipeSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        pe = serializer.save()
+        self.assertEqual(pe.equipe, equipe2027)
+
+    def test_model_clean_prevents_user_in_two_teams_in_same_edicao(self):
+        from django.core.exceptions import ValidationError
+        ParticipanteEquipe.objects.create(user=self.user_participante, equipe=self.equipe)
+
+        projeto2 = Projeto.objects.create(
+            nome_projeto='Projeto Gama',
+            edicao=self.edicao,
+            link_deploy_projeto='https://gama.example.com'
+        )
+        equipe2 = Equipe.objects.create(
+            nome_equipe='Equipe Gama',
+            edicao=self.edicao,
+            tema=self.tema,
+            projeto=projeto2
+        )
+
+        pe2 = ParticipanteEquipe(user=self.user_participante, equipe=equipe2)
+        with self.assertRaises(ValidationError) as cm:
+            pe2.save()
+        self.assertIn('user', cm.exception.message_dict)
+        self.assertIn('já faz parte da equipe', str(cm.exception.message_dict['user']))
+
+    def test_api_viewset_blocks_user_in_two_teams_same_edicao(self):
+        ParticipanteEquipe.objects.create(user=self.user_participante, equipe=self.equipe)
+
+        projeto2 = Projeto.objects.create(
+            nome_projeto='Projeto Delta',
+            edicao=self.edicao,
+            link_deploy_projeto='https://delta.example.com'
+        )
+        equipe2 = Equipe.objects.create(
+            nome_equipe='Equipe Delta',
+            edicao=self.edicao,
+            tema=self.tema,
+            projeto=projeto2
+        )
+
+        view = ParticipanteEquipeViewSet.as_view({'post': 'create'})
+        request = self.factory.post('/api/participantes-equipe/', {
+            'user': self.user_participante.id,
+            'equipe': equipe2.id
         }, format='json')
         force_authenticate(request, user=self.user_participante)
 

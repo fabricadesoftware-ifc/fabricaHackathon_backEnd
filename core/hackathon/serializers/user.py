@@ -7,7 +7,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'nome_user', 'email_user', 'tipoUser', 'is_active', 'date_joined']
+        fields = [
+            'id', 'username', 'password', 'first_name', 'last_name',
+            'email', 'tipoUser', 'is_active', 'date_joined'
+        ]
         read_only_fields = ['id', 'is_active', 'date_joined']
 
     def validate_tipoUser(self, value):
@@ -20,12 +23,15 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
-        if 'email_user' in validated_data and not validated_data.get('email'):
-            validated_data['email'] = validated_data['email_user']
-        if 'nome_user' in validated_data and not validated_data.get('first_name'):
-            validated_data['first_name'] = validated_data['nome_user']
-
         user = super().create(validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().update(instance, validated_data)
         if password:
             user.set_password(password)
             user.save()
@@ -34,4 +40,4 @@ class UserSerializer(serializers.ModelSerializer):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'nome_user', 'email_user', 'tipoUser']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'tipoUser']

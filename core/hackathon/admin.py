@@ -5,12 +5,12 @@ from .models import Apoiador, TipoEdicao, User, Edicao, Criterio, Tema, Projeto,
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('Informações do Hackathon', {'fields': ('nome_user', 'email_user', 'tipoUser')}),
+        ('Informações do Hackathon', {'fields': ('tipoUser',)}),
     )
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
-        ('Informações do Hackathon', {'fields': ('nome_user', 'email_user', 'tipoUser')}),
+        ('Informações do Hackathon', {'fields': ('tipoUser',)}),
     )
-    list_display = ['username', 'email_user', 'nome_user', 'tipoUser', 'is_staff']
+    list_display = ['username', 'email', 'first_name', 'last_name', 'tipoUser', 'is_staff']
     list_filter = ['tipoUser', 'is_staff', 'is_superuser', 'is_active']
 
 admin.site.register(Apoiador)

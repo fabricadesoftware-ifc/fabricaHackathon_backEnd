@@ -66,8 +66,7 @@ def populate():
     user1, _ = User.objects.get_or_create(
         username='joao',
         defaults={
-            'nome_user': 'João Silva',
-            'email_user': 'joao@example.com',
+            'first_name': 'João Silva',
             'email': 'joao@example.com',
             'tipoUser': tipoUser.participante
         }
@@ -79,8 +78,7 @@ def populate():
     user2, _ = User.objects.get_or_create(
         username='maria',
         defaults={
-            'nome_user': 'Maria Souza',
-            'email_user': 'maria@example.com',
+            'first_name': 'Maria Souza',
             'email': 'maria@example.com',
             'tipoUser': tipoUser.avaliador
         }
@@ -92,8 +90,7 @@ def populate():
     user_admin, _ = User.objects.get_or_create(
         username='admin',
         defaults={
-            'nome_user': 'Administrador',
-            'email_user': 'admin@example.com',
+            'first_name': 'Administrador',
             'email': 'admin@example.com',
             'tipoUser': tipoUser.admin,
             'is_staff': True,

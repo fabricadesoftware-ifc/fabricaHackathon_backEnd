@@ -14,8 +14,6 @@ class Migration(migrations.Migration):
             name='User',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nome_user', models.CharField(max_length=255)),
-                ('email_user', models.EmailField(max_length=254, unique=True)),
                 ('auth_user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='hackathon_user', to='auth.user')),
                 ('tipoUser', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='hackathon.tipouser')),
             ],
