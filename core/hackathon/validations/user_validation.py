@@ -19,6 +19,7 @@ def validate_user_tipo(tipo_solicitado, request_user=None):
         is_admin = (
             request_user.is_staff
             or request_user.is_superuser
+            or getattr(request_user, "tipoUser", None) == tipoUser.admin
             or getattr(getattr(request_user, "hackathon_user", None), "tipoUser", None) == tipoUser.admin
         )
 
