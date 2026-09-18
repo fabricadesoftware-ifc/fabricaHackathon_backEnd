@@ -12,7 +12,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_project.settings')
 django.setup()
 
 from core.hackathon.models import (
-    TipoEdicao, Apoiador, User, Edicao, Criterio, Tema, Projeto, Equipe, Nota
+    TipoEdicao, Apoiador, User, Edicao, Criterio, Tema, Projeto, Equipe, Nota, ParticipanteEquipe
 )
 from core.hackathon.models.user import tipoUser
 
@@ -89,12 +89,26 @@ def populate():
         user2.set_password('123456')
         user2.save()
 
-    # 8. Projeto
+    user_admin, _ = User.objects.get_or_create(
+        username='admin',
+        defaults={
+            'nome_user': 'Administrador',
+            'email_user': 'admin@example.com',
+            'email': 'admin@example.com',
+            'tipoUser': tipoUser.admin,
+            'is_staff': True,
+            'is_superuser': True
+        }
+    )
+    if not user_admin.has_usable_password():
+        user_admin.set_password('123456')
+        user_admin.save()
+
+    # 7. Projeto
     print("Criando Projetos...")
     projeto_saude, _ = Projeto.objects.get_or_create(
         nome_projeto='App Vida Saudável',
         edicao=edicao_2024,
-        tema=tema_saude,
         defaults={
             'descricao_projeto': 'Um aplicativo para monitorar hábitos de saúde.',
             'link_deploy_projeto': 'https://vidasaudavel.example.com',
@@ -105,7 +119,6 @@ def populate():
     projeto_edu, _ = Projeto.objects.get_or_create(
         nome_projeto='Plataforma Educar',
         edicao=edicao_2024,
-        tema=tema_educacao,
         defaults={
             'descricao_projeto': 'Plataforma EAD para escolas públicas.',
             'link_deploy_projeto': 'https://educar.example.com',
@@ -113,7 +126,7 @@ def populate():
         }
     )
 
-    # 9. Equipe
+    # 8. Equipe
     print("Criando Equipes...")
     equipe_alpha, _ = Equipe.objects.get_or_create(
         nome_equipe='Equipe Alpha',
@@ -131,6 +144,13 @@ def populate():
             'tema': tema_educacao,
             'projeto': projeto_edu
         }
+    )
+
+    # 9. ParticipanteEquipe
+    print("Associando Participantes às Equipes...")
+    ParticipanteEquipe.objects.get_or_create(
+        user=user1,
+        equipe=equipe_alpha
     )
 
     # 10. Nota

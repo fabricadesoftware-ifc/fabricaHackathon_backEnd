@@ -9,13 +9,13 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('hackathon', '0012_populate_tipo_user'),
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('auth', '0001_initial'),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='user',
             name='auth_user',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, related_name='hackathon_user', to=settings.AUTH_USER_MODEL),
+            field=models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, related_name='hackathon_user', to='auth.user'),
         ),
     ]
