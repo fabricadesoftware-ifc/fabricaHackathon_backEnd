@@ -153,7 +153,7 @@ def populate():
     # 10. AvaliadorEdicao
     print("Associando Avaliadores às Edições...")
     AvaliadorEdicao.objects.get_or_create(
-        user=user2,
+        avaliador=user2,
         edicao=edicao_2024
     )
 

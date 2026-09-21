@@ -11,3 +11,6 @@ class AvaliadorEdicaoViewSet(ModelViewSet):
         if self.action == 'list':
             return AvaliadorEdicaoListSerializer
         return super().get_serializer_class()
+
+
+AvaliadorViewSet = AvaliadorEdicaoViewSet

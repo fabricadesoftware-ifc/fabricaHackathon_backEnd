@@ -16,12 +16,15 @@ from .models.user import tipoUser
 from .serializers import (
     UserSerializer,
     ParticipanteEquipeSerializer,
+    AvaliadorSerializer,
+    AvaliadorListSerializer,
     AvaliadorEdicaoSerializer,
     AvaliadorEdicaoListSerializer,
 )
 from .views import (
     UserViewSet,
     ParticipanteEquipeViewSet,
+    AvaliadorViewSet,
     AvaliadorEdicaoViewSet,
 )
 
@@ -446,40 +449,40 @@ class AvaliadorEdicaoValidationTests(TestCase):
 
     def test_avaliador_can_be_linked_to_edicao_serializer(self):
         data = {
-            'user': self.user_avaliador.id,
+            'avaliador': self.user_avaliador.id,
             'edicao': self.edicao1.id
         }
         serializer = AvaliadorSerializer(data=data)
         self.assertTrue(serializer.is_valid(), serializer.errors)
         avaliador_edicao = serializer.save()
-        self.assertEqual(avaliador_edicao.user, self.user_avaliador)
+        self.assertEqual(avaliador_edicao.avaliador, self.user_avaliador)
         self.assertEqual(avaliador_edicao.edicao, self.edicao1)
 
     def test_participante_cannot_be_avaliador_serializer(self):
         data = {
-            'user': self.user_participante.id,
+            'avaliador': self.user_participante.id,
             'edicao': self.edicao1.id
         }
         serializer = AvaliadorSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn('user', serializer.errors)
-        self.assertIn('Apenas usuários com perfil de Avaliador', str(serializer.errors['user']))
+        self.assertIn('avaliador', serializer.errors)
+        self.assertIn('Apenas usuários com perfil de Avaliador', str(serializer.errors['avaliador']))
 
     def test_admin_cannot_be_avaliador_serializer(self):
         data = {
-            'user': self.user_admin.id,
+            'avaliador': self.user_admin.id,
             'edicao': self.edicao1.id
         }
         serializer = AvaliadorSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn('user', serializer.errors)
-        self.assertIn('Apenas usuários com perfil de Avaliador', str(serializer.errors['user']))
+        self.assertIn('avaliador', serializer.errors)
+        self.assertIn('Apenas usuários com perfil de Avaliador', str(serializer.errors['avaliador']))
 
     def test_same_avaliador_cannot_be_linked_twice_to_same_edicao(self):
-        AvaliadorEdicao.objects.create(user=self.user_avaliador, edicao=self.edicao1)
+        AvaliadorEdicao.objects.create(avaliador=self.user_avaliador, edicao=self.edicao1)
 
         data = {
-            'user': self.user_avaliador.id,
+            'avaliador': self.user_avaliador.id,
             'edicao': self.edicao1.id
         }
         serializer = AvaliadorSerializer(data=data)
@@ -488,10 +491,10 @@ class AvaliadorEdicaoValidationTests(TestCase):
         self.assertIn('já está vinculado como avaliador', str(serializer.errors['non_field_errors']))
 
     def test_same_avaliador_can_be_linked_to_different_edicoes(self):
-        AvaliadorEdicao.objects.create(user=self.user_avaliador, edicao=self.edicao1)
+        AvaliadorEdicao.objects.create(avaliador=self.user_avaliador, edicao=self.edicao1)
 
         data = {
-            'user': self.user_avaliador.id,
+            'avaliador': self.user_avaliador.id,
             'edicao': self.edicao2.id
         }
         serializer = AvaliadorSerializer(data=data)
@@ -503,25 +506,25 @@ class AvaliadorEdicaoValidationTests(TestCase):
         from django.core.exceptions import ValidationError
 
         # Bloqueia perfil não avaliador
-        av_invalido = AvaliadorEdicao(user=self.user_participante, edicao=self.edicao1)
+        av_invalido = AvaliadorEdicao(avaliador=self.user_participante, edicao=self.edicao1)
         with self.assertRaises(ValidationError) as cm:
             av_invalido.save()
-        self.assertIn('user', cm.exception.message_dict)
+        self.assertIn('avaliador', cm.exception.message_dict)
 
         # Salva válido
-        AvaliadorEdicao.objects.create(user=self.user_avaliador, edicao=self.edicao1)
+        AvaliadorEdicao.objects.create(avaliador=self.user_avaliador, edicao=self.edicao1)
 
         # Bloqueia duplicado
-        av_duplicado = AvaliadorEdicao(user=self.user_avaliador, edicao=self.edicao1)
+        av_duplicado = AvaliadorEdicao(avaliador=self.user_avaliador, edicao=self.edicao1)
         with self.assertRaises(ValidationError) as cm:
             av_duplicado.save()
-        self.assertIn('user', cm.exception.message_dict)
+        self.assertIn('avaliador', cm.exception.message_dict)
 
     def test_avaliador_viewset_crud(self):
         # 1. CREATE (POST)
         view_create = AvaliadorViewSet.as_view({'post': 'create'})
         req_create = self.factory.post('/api/avaliadores/', {
-            'user': self.user_avaliador.id,
+            'avaliador': self.user_avaliador.id,
             'edicao': self.edicao1.id
         }, format='json')
         force_authenticate(req_create, user=self.user_admin)
@@ -544,7 +547,7 @@ class AvaliadorEdicaoValidationTests(TestCase):
         force_authenticate(req_detail, user=self.user_admin)
         res_detail = view_detail(req_detail, pk=avaliador_id)
         self.assertEqual(res_detail.status_code, 200)
-        self.assertEqual(res_detail.data['user'], self.user_avaliador.id)
+        self.assertEqual(res_detail.data['avaliador'], self.user_avaliador.id)
 
         # 4. UPDATE (PATCH)
         view_update = AvaliadorViewSet.as_view({'patch': 'partial_update'})

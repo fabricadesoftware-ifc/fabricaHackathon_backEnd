@@ -15,20 +15,20 @@ def validate_avaliador_tipo(user):
     )
 
 
-def validate_avaliador_edicao_unica(user, edicao, instance=None):
+def validate_avaliador_edicao_unica(avaliador, edicao, instance=None):
     """
     Valida se o usuário já está vinculado como avaliador nesta edição.
     """
     from ..models import AvaliadorEdicao
 
-    if not user or not edicao:
+    if not avaliador or not edicao:
         return
 
-    qs = AvaliadorEdicao.objects.filter(user=user, edicao=edicao)
+    qs = AvaliadorEdicao.objects.filter(avaliador=avaliador, edicao=edicao)
     if instance and instance.pk:
         qs = qs.exclude(pk=instance.pk)
 
     if qs.exists():
         raise serializers.ValidationError(
-            {"user": f"O usuário '{user.username}' já está vinculado como avaliador nesta edição."}
+            {"avaliador": f"O usuário '{avaliador.username}' já está vinculado como avaliador nesta edição."}
         )

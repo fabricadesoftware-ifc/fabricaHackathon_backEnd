@@ -9,6 +9,8 @@ from .equipe import EquipeListSerializer, EquipeSerializer
 from .participanteEquipe import ParticipanteEquipeSerializer, ParticipanteEquipeListSerializer
 from .nota import NotaSerializer, NotaListSerializer
 from .avaliadorEdicao import (
+    AvaliadorSerializer,
+    AvaliadorListSerializer,
     AvaliadorEdicaoSerializer,
     AvaliadorEdicaoListSerializer,
 )
@@ -31,6 +33,8 @@ __all__ = [
     "NotaListSerializer",
     "ParticipanteEquipeSerializer",
     "ParticipanteEquipeListSerializer",
+    "AvaliadorSerializer",
+    "AvaliadorListSerializer",
     "AvaliadorEdicaoSerializer",
     "AvaliadorEdicaoListSerializer",
 ]

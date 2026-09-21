@@ -16,12 +16,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('edicao', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='avaliadores', to='hackathon.edicao')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='edicoes_avaliador', to=settings.AUTH_USER_MODEL)),
+                ('avaliador', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='edicoes_avaliadas', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'Avaliador da Edição',
-                'verbose_name_plural': 'Avaliadores da Edição',
-                'unique_together': {('user', 'edicao')},
+                'verbose_name_plural': 'Avaliadores por Edição',
+                'unique_together': {('avaliador', 'edicao')},
             },
         ),
     ]

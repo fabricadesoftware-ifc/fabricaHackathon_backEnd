@@ -4,25 +4,28 @@ from ..models import AvaliadorEdicao
 from ..validations.avaliador_edicao_validation import validate_avaliador_tipo
 
 
-class AvaliadorEdicaoSerializer(ModelSerializer):
+class AvaliadorSerializer(ModelSerializer):
     class Meta:
         model = AvaliadorEdicao
-        fields = ['id', 'user', 'edicao']
+        fields = ['id', 'avaliador', 'edicao']
         validators = [
             serializers.UniqueTogetherValidator(
                 queryset=AvaliadorEdicao.objects.all(),
-                fields=['user', 'edicao'],
+                fields=['avaliador', 'edicao'],
                 message="Este usuário já está vinculado como avaliador nesta edição."
             )
         ]
 
-    def validate_user(self, value):
+    def validate_avaliador(self, value):
         validate_avaliador_tipo(value)
         return value
 
 
-class AvaliadorEdicaoListSerializer(ModelSerializer):
+class AvaliadorListSerializer(ModelSerializer):
     class Meta:
         model = AvaliadorEdicao
-        fields = ['id', 'user', 'edicao']
+        fields = ['id', 'avaliador', 'edicao']
 
+
+AvaliadorEdicaoSerializer = AvaliadorSerializer
+AvaliadorEdicaoListSerializer = AvaliadorListSerializer

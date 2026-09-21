@@ -8,7 +8,7 @@ from .projeto import ProjetoViewSet
 from .equipe import EquipeViewSet
 from .nota import NotaViewSet
 from .participanteEquipe import ParticipanteEquipeViewSet
-from .avaliadorEdicao import AvaliadorEdicaoViewSet
+from .avaliadorEdicao import AvaliadorViewSet, AvaliadorEdicaoViewSet
 
 __all__ = [
     "ApoiadorViewSet",
@@ -21,5 +21,6 @@ __all__ = [
     "EquipeViewSet",
     "NotaViewSet",
     "ParticipanteEquipeViewSet",
+    "AvaliadorViewSet",
     "AvaliadorEdicaoViewSet",
 ]
