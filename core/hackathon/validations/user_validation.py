@@ -27,3 +27,14 @@ def validate_user_tipo(tipo_solicitado, request_user=None):
             raise serializers.ValidationError(
                 "Você não tem permissão para cadastrar ou alterar usuários para este perfil."
             )
+
+
+def validate_user_tipo_perfil(user, tipo_esperado, mensagem=None):
+    """
+    Valida se o usuário possui o tipoUser esperado.
+    Evita duplicação de lógica entre diferentes entidades (Participante, Avaliador, Admin).
+    """
+    if user and getattr(user, 'tipoUser', None) != tipo_esperado:
+        raise serializers.ValidationError(
+            mensagem or f"Apenas usuários com perfil de {tipo_esperado} podem realizar esta ação."
+        )

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from ..models.user import tipoUser
+from .user_validation import validate_user_tipo_perfil
 
 
 def validate_participante_tipo(user):
@@ -7,10 +8,11 @@ def validate_participante_tipo(user):
     Valida se o usuário possui perfil de PARTICIPANTE.
     Apenas participantes podem fazer parte de equipes.
     """
-    if user and getattr(user, 'tipoUser', None) != tipoUser.participante:
-        raise serializers.ValidationError(
-            "Apenas usuários com perfil de Participante podem fazer parte de uma equipe."
-        )
+    validate_user_tipo_perfil(
+        user,
+        tipoUser.participante,
+        "Apenas usuários com perfil de Participante podem fazer parte de uma equipe."
+    )
 
 
 def validate_participante_edicao_unica(user, equipe, instance=None):
