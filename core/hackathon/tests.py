@@ -1,7 +1,6 @@
 from datetime import date, timedelta
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
-from rest_framework import serializers
 
 from .models import (
     User,
@@ -10,16 +9,20 @@ from .models import (
     Tema,
     Projeto,
     TipoEdicao,
-    ParticipanteEquipe
+    ParticipanteEquipe,
+    AvaliadorEdicao,
 )
 from .models.user import tipoUser
 from .serializers import (
     UserSerializer,
-    ParticipanteEquipeSerializer
+    ParticipanteEquipeSerializer,
+    AvaliadorEdicaoSerializer,
+    AvaliadorEdicaoListSerializer,
 )
 from .views import (
     UserViewSet,
-    ParticipanteEquipeViewSet
+    ParticipanteEquipeViewSet,
+    AvaliadorEdicaoViewSet,
 )
 
 
@@ -389,3 +392,174 @@ class ParticipanteEquipeValidationTests(TestCase):
         response = view(request)
         self.assertEqual(response.status_code, 400)
         self.assertIn('user', response.data)
+
+
+class AvaliadorEdicaoValidationTests(TestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+
+        self.user_avaliador = User.objects.create_user(
+            username='avaliador_test',
+            email='avaliador_test@test.com',
+            first_name='Avaliador Test',
+            password='password123',
+            tipoUser=tipoUser.avaliador
+        )
+        self.user_participante = User.objects.create_user(
+            username='participante_test',
+            email='participante_test@test.com',
+            first_name='Participante Test',
+            password='password123',
+            tipoUser=tipoUser.participante
+        )
+        self.user_admin = User.objects.create_superuser(
+            username='admin_test',
+            email='admin_test@test.com',
+            first_name='Admin Test',
+            password='password123',
+            tipoUser=tipoUser.admin
+        )
+
+        self.tipo_edicao = TipoEdicao.objects.create(nome='Presencial')
+        self.edicao1 = Edicao.objects.create(
+            nome='Hackathon 2026',
+            ano=2026,
+            status='INSCRICAO',
+            data_inicio=date.today(),
+            data_fim=date.today() + timedelta(days=3),
+            minimo_participantes=2,
+            maximo_participantes=5,
+            maximo_equipes=10,
+            tipo_edicao=self.tipo_edicao
+        )
+        self.edicao2 = Edicao.objects.create(
+            nome='Hackathon 2027',
+            ano=2027,
+            status='INSCRICAO',
+            data_inicio=date.today() + timedelta(days=365),
+            data_fim=date.today() + timedelta(days=368),
+            minimo_participantes=2,
+            maximo_participantes=5,
+            maximo_equipes=10,
+            tipo_edicao=self.tipo_edicao
+        )
+
+    def test_avaliador_can_be_linked_to_edicao_serializer(self):
+        data = {
+            'user': self.user_avaliador.id,
+            'edicao': self.edicao1.id
+        }
+        serializer = AvaliadorSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        avaliador_edicao = serializer.save()
+        self.assertEqual(avaliador_edicao.user, self.user_avaliador)
+        self.assertEqual(avaliador_edicao.edicao, self.edicao1)
+
+    def test_participante_cannot_be_avaliador_serializer(self):
+        data = {
+            'user': self.user_participante.id,
+            'edicao': self.edicao1.id
+        }
+        serializer = AvaliadorSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('user', serializer.errors)
+        self.assertIn('Apenas usuários com perfil de Avaliador', str(serializer.errors['user']))
+
+    def test_admin_cannot_be_avaliador_serializer(self):
+        data = {
+            'user': self.user_admin.id,
+            'edicao': self.edicao1.id
+        }
+        serializer = AvaliadorSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('user', serializer.errors)
+        self.assertIn('Apenas usuários com perfil de Avaliador', str(serializer.errors['user']))
+
+    def test_same_avaliador_cannot_be_linked_twice_to_same_edicao(self):
+        AvaliadorEdicao.objects.create(user=self.user_avaliador, edicao=self.edicao1)
+
+        data = {
+            'user': self.user_avaliador.id,
+            'edicao': self.edicao1.id
+        }
+        serializer = AvaliadorSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('non_field_errors', serializer.errors)
+        self.assertIn('já está vinculado como avaliador', str(serializer.errors['non_field_errors']))
+
+    def test_same_avaliador_can_be_linked_to_different_edicoes(self):
+        AvaliadorEdicao.objects.create(user=self.user_avaliador, edicao=self.edicao1)
+
+        data = {
+            'user': self.user_avaliador.id,
+            'edicao': self.edicao2.id
+        }
+        serializer = AvaliadorSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        av2 = serializer.save()
+        self.assertEqual(av2.edicao, self.edicao2)
+
+    def test_model_clean_blocks_invalid_role_and_duplicates(self):
+        from django.core.exceptions import ValidationError
+
+        # Bloqueia perfil não avaliador
+        av_invalido = AvaliadorEdicao(user=self.user_participante, edicao=self.edicao1)
+        with self.assertRaises(ValidationError) as cm:
+            av_invalido.save()
+        self.assertIn('user', cm.exception.message_dict)
+
+        # Salva válido
+        AvaliadorEdicao.objects.create(user=self.user_avaliador, edicao=self.edicao1)
+
+        # Bloqueia duplicado
+        av_duplicado = AvaliadorEdicao(user=self.user_avaliador, edicao=self.edicao1)
+        with self.assertRaises(ValidationError) as cm:
+            av_duplicado.save()
+        self.assertIn('user', cm.exception.message_dict)
+
+    def test_avaliador_viewset_crud(self):
+        # 1. CREATE (POST)
+        view_create = AvaliadorViewSet.as_view({'post': 'create'})
+        req_create = self.factory.post('/api/avaliadores/', {
+            'user': self.user_avaliador.id,
+            'edicao': self.edicao1.id
+        }, format='json')
+        force_authenticate(req_create, user=self.user_admin)
+        res_create = view_create(req_create)
+        self.assertEqual(res_create.status_code, 201)
+        avaliador_id = res_create.data['id']
+
+        # 2. LIST (GET) - Usa AvaliadorListSerializer
+        view_list = AvaliadorViewSet.as_view({'get': 'list'})
+        req_list = self.factory.get('/api/avaliadores/')
+        force_authenticate(req_list, user=self.user_admin)
+        res_list = view_list(req_list)
+        self.assertEqual(res_list.status_code, 200)
+        self.assertEqual(len(res_list.data), 1)
+        self.assertEqual(res_list.data[0]['id'], avaliador_id)
+
+        # 3. DETAIL (GET)
+        view_detail = AvaliadorViewSet.as_view({'get': 'retrieve'})
+        req_detail = self.factory.get(f'/api/avaliadores/{avaliador_id}/')
+        force_authenticate(req_detail, user=self.user_admin)
+        res_detail = view_detail(req_detail, pk=avaliador_id)
+        self.assertEqual(res_detail.status_code, 200)
+        self.assertEqual(res_detail.data['user'], self.user_avaliador.id)
+
+        # 4. UPDATE (PATCH)
+        view_update = AvaliadorViewSet.as_view({'patch': 'partial_update'})
+        req_update = self.factory.patch(f'/api/avaliadores/{avaliador_id}/', {
+            'edicao': self.edicao2.id
+        }, format='json')
+        force_authenticate(req_update, user=self.user_admin)
+        res_update = view_update(req_update, pk=avaliador_id)
+        self.assertEqual(res_update.status_code, 200)
+        self.assertEqual(res_update.data['edicao'], self.edicao2.id)
+
+        # 5. DELETE (DELETE)
+        view_delete = AvaliadorViewSet.as_view({'delete': 'destroy'})
+        req_delete = self.factory.delete(f'/api/avaliadores/{avaliador_id}/')
+        force_authenticate(req_delete, user=self.user_admin)
+        res_delete = view_delete(req_delete, pk=avaliador_id)
+        self.assertEqual(res_delete.status_code, 204)
+        self.assertFalse(AvaliadorEdicao.objects.filter(pk=avaliador_id).exists())

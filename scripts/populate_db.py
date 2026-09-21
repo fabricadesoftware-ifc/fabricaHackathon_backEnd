@@ -12,7 +12,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_project.settings')
 django.setup()
 
 from core.hackathon.models import (
-    TipoEdicao, Apoiador, User, Edicao, Criterio, Tema, Projeto, Equipe, Nota, ParticipanteEquipe
+    TipoEdicao, Apoiador, User, Edicao, Criterio, Tema, Projeto, Equipe, Nota, ParticipanteEquipe, AvaliadorEdicao
 )
 from core.hackathon.models.user import tipoUser
 
@@ -150,7 +150,14 @@ def populate():
         equipe=equipe_alpha
     )
 
-    # 10. Nota
+    # 10. AvaliadorEdicao
+    print("Associando Avaliadores às Edições...")
+    AvaliadorEdicao.objects.get_or_create(
+        user=user2,
+        edicao=edicao_2024
+    )
+
+    # 11. Nota
     print("Criando Notas...")
     Nota.objects.get_or_create(
         projeto=projeto_saude,
