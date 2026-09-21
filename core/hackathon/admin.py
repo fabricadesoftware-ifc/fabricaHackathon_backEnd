@@ -1,6 +1,18 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Apoiador, TipoEdicao, User, Edicao, Criterio, Tema, Projeto, Equipe, Nota, ParticipanteEquipe
+from .models import (
+    Apoiador,
+    TipoEdicao,
+    User,
+    Edicao,
+    Criterio,
+    Tema,
+    Projeto,
+    Equipe,
+    Nota,
+    ParticipanteEquipe,
+    AvaliadorEdicao,
+)
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
@@ -22,3 +34,4 @@ admin.site.register(Projeto)
 admin.site.register(Equipe)
 admin.site.register(Nota)
 admin.site.register(ParticipanteEquipe)
+admin.site.register(AvaliadorEdicao)
