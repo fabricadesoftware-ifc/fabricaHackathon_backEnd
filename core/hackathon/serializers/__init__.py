@@ -8,6 +8,10 @@ from .projeto import ProjetoListSerializer, ProjetoSerializer
 from .equipe import EquipeListSerializer, EquipeSerializer
 from .participanteEquipe import ParticipanteEquipeSerializer, ParticipanteEquipeListSerializer
 from .nota import NotaSerializer, NotaListSerializer
+from .avaliadorEdicao import (
+    AvaliadorEdicaoSerializer,
+    AvaliadorEdicaoListSerializer,
+)
 
 __all__ = [
     "ApoiadorSerializer",
@@ -27,4 +31,6 @@ __all__ = [
     "NotaListSerializer",
     "ParticipanteEquipeSerializer",
     "ParticipanteEquipeListSerializer",
+    "AvaliadorEdicaoSerializer",
+    "AvaliadorEdicaoListSerializer",
 ]
