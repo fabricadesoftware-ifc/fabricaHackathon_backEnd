@@ -1,6 +1,5 @@
 from .apoiador import Apoiador
 from .tipo_edicao import TipoEdicao
-from .tipo_user import TipoUser
 from .user import User
 from .edicao import Edicao
 from .criterio import Criterio
@@ -9,10 +8,10 @@ from .projeto import Projeto
 from .equipe import Equipe
 from .nota import Nota
 from .participanteEquipe import ParticipanteEquipe
+from .avaliadorEdicao import AvaliadorEdicao
 __all__ = [
     "Apoiador",
     "TipoEdicao",
-    "TipoUser",
     "User",
     "Edicao",
     "Criterio",
@@ -20,5 +19,6 @@ __all__ = [
     "Projeto",
     "Equipe",
     "Nota",
-    "ParticipanteEquipe"
+    "ParticipanteEquipe",
+    "AvaliadorEdicao",
 ]

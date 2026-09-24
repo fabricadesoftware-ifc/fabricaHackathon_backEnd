@@ -3,7 +3,7 @@ from ..models import User
 from ..serializers import UserSerializer, UserListSerializer
 
 class UserViewSet(ModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
 
     def get_serializer_class(self):

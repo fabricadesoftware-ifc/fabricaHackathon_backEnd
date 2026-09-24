@@ -76,6 +76,8 @@ REST_FRAMEWORK = {
 
 WSGI_APPLICATION = 'django_project.wsgi.application'
 
+AUTH_USER_MODEL = 'hackathon.User'
+
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
