@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from decimal import Decimal
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
@@ -11,6 +12,8 @@ from .models import (
     TipoEdicao,
     ParticipanteEquipe,
     AvaliadorEdicao,
+    Criterio,
+    Nota,
 )
 from .models.user import tipoUser
 from .serializers import (
@@ -20,12 +23,16 @@ from .serializers import (
     AvaliadorListSerializer,
     AvaliadorEdicaoSerializer,
     AvaliadorEdicaoListSerializer,
+    NotaSerializer,
+    NotaListSerializer,
+    NotaLoteSerializer,
 )
 from .views import (
     UserViewSet,
     ParticipanteEquipeViewSet,
     AvaliadorViewSet,
     AvaliadorEdicaoViewSet,
+    NotaViewSet,
 )
 
 
@@ -566,3 +573,296 @@ class AvaliadorEdicaoValidationTests(TestCase):
         res_delete = view_delete(req_delete, pk=avaliador_id)
         self.assertEqual(res_delete.status_code, 204)
         self.assertFalse(AvaliadorEdicao.objects.filter(pk=avaliador_id).exists())
+
+
+class NotaValidationTests(TestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+
+        self.tipo_edicao = TipoEdicao.objects.create(nome='Presencial')
+        self.edicao1 = Edicao.objects.create(
+            nome='Hackathon 2026',
+            ano=2026,
+            status='INSCRICAO',
+            data_inicio=date.today(),
+            data_fim=date.today() + timedelta(days=3),
+            minimo_participantes=2,
+            maximo_participantes=5,
+            maximo_equipes=10,
+            tipo_edicao=self.tipo_edicao
+        )
+        self.edicao2 = Edicao.objects.create(
+            nome='Hackathon 2027',
+            ano=2027,
+            status='INSCRICAO',
+            data_inicio=date.today() + timedelta(days=365),
+            data_fim=date.today() + timedelta(days=368),
+            minimo_participantes=2,
+            maximo_participantes=5,
+            maximo_equipes=10,
+            tipo_edicao=self.tipo_edicao
+        )
+
+        self.user_avaliador1 = User.objects.create_user(
+            username='avaliador1',
+            email='av1@test.com',
+            first_name='Avaliador 1',
+            password='password123',
+            tipoUser=tipoUser.avaliador
+        )
+        self.user_avaliador2 = User.objects.create_user(
+            username='avaliador2',
+            email='av2@test.com',
+            first_name='Avaliador 2',
+            password='password123',
+            tipoUser=tipoUser.avaliador
+        )
+        self.user_admin = User.objects.create_superuser(
+            username='admin_nota',
+            email='admin_nota@test.com',
+            first_name='Admin Nota',
+            password='password123',
+            tipoUser=tipoUser.admin
+        )
+
+        self.avaliador_edicao1 = AvaliadorEdicao.objects.create(
+            avaliador=self.user_avaliador1,
+            edicao=self.edicao1
+        )
+        self.avaliador_edicao2 = AvaliadorEdicao.objects.create(
+            avaliador=self.user_avaliador2,
+            edicao=self.edicao2
+        )
+
+        self.projeto1 = Projeto.objects.create(
+            nome_projeto='Projeto 1',
+            descricao_projeto='Descricao 1',
+            edicao=self.edicao1,
+            link_deploy_projeto='https://proj1.example.com'
+        )
+        self.projeto2 = Projeto.objects.create(
+            nome_projeto='Projeto 2',
+            descricao_projeto='Descricao 2',
+            edicao=self.edicao2,
+            link_deploy_projeto='https://proj2.example.com'
+        )
+
+        self.criterio1_ed1 = Criterio.objects.create(
+            nome='Inovação',
+            edicao=self.edicao1
+        )
+        self.criterio2_ed1 = Criterio.objects.create(
+            nome='Usabilidade',
+            edicao=self.edicao1
+        )
+        self.criterio1_ed2 = Criterio.objects.create(
+            nome='Impacto',
+            edicao=self.edicao2
+        )
+
+    def test_single_nota_creation_success(self):
+        view = NotaViewSet.as_view({'post': 'create'})
+        payload = {
+            'avaliador': self.avaliador_edicao1.id,
+            'projeto': self.projeto1.id,
+            'criterio': self.criterio1_ed1.id,
+            'nota': '8.50',
+            'comentario_nota': 'Muito bom'
+        }
+        request = self.factory.post('/api/notas/', payload, format='json')
+        force_authenticate(request, user=self.user_avaliador1)
+        response = view(request)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['nota'], '8.50')
+        self.assertEqual(response.data['avaliador'], self.avaliador_edicao1.id)
+        self.assertEqual(response.data['projeto'], self.projeto1.id)
+
+    def test_single_nota_fails_when_avaliador_from_different_edicao(self):
+        view = NotaViewSet.as_view({'post': 'create'})
+        payload = {
+            'avaliador': self.avaliador_edicao2.id,
+            'projeto': self.projeto1.id,
+            'criterio': self.criterio1_ed1.id,
+            'nota': '8.50'
+        }
+        request = self.factory.post('/api/notas/', payload, format='json')
+        force_authenticate(request, user=self.user_avaliador2)
+        response = view(request)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('avaliador', response.data)
+        self.assertIn('não pertence à mesma edição', str(response.data['avaliador']))
+
+    def test_single_nota_fails_when_criterio_from_different_edicao(self):
+        view = NotaViewSet.as_view({'post': 'create'})
+        payload = {
+            'avaliador': self.avaliador_edicao1.id,
+            'projeto': self.projeto1.id,
+            'criterio': self.criterio1_ed2.id,
+            'nota': '8.50'
+        }
+        request = self.factory.post('/api/notas/', payload, format='json')
+        force_authenticate(request, user=self.user_avaliador1)
+        response = view(request)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('criterio', response.data)
+        self.assertIn('não pertence à mesma edição', str(response.data['criterio']))
+
+    def test_single_nota_fails_duplicate(self):
+        Nota.objects.create(
+            avaliador=self.avaliador_edicao1,
+            projeto=self.projeto1,
+            criterio=self.criterio1_ed1,
+            nota=Decimal('7.00')
+        )
+        view = NotaViewSet.as_view({'post': 'create'})
+        payload = {
+            'avaliador': self.avaliador_edicao1.id,
+            'projeto': self.projeto1.id,
+            'criterio': self.criterio1_ed1.id,
+            'nota': '8.50'
+        }
+        request = self.factory.post('/api/notas/', payload, format='json')
+        force_authenticate(request, user=self.user_avaliador1)
+        response = view(request)
+        self.assertEqual(response.status_code, 400)
+
+    def test_batch_nota_creation_success(self):
+        view = NotaViewSet.as_view({'post': 'lote'})
+        payload = {
+            'avaliador': self.avaliador_edicao1.id,
+            'projeto': self.projeto1.id,
+            'notas': [
+                {'criterio': self.criterio1_ed1.id, 'nota': '8.50', 'comentario_nota': 'Bom'},
+                {'criterio': self.criterio2_ed1.id, 'nota': '9.00'}
+            ]
+        }
+        request = self.factory.post('/api/notas/lote/', payload, format='json')
+        force_authenticate(request, user=self.user_avaliador1)
+        response = view(request)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(
+            Nota.objects.filter(avaliador=self.avaliador_edicao1, projeto=self.projeto1).count(),
+            2
+        )
+
+    def test_batch_nota_fails_cross_edition_avaliador(self):
+        view = NotaViewSet.as_view({'post': 'lote'})
+        payload = {
+            'avaliador': self.avaliador_edicao2.id,
+            'projeto': self.projeto1.id,
+            'notas': [
+                {'criterio': self.criterio1_ed1.id, 'nota': '8.50'}
+            ]
+        }
+        request = self.factory.post('/api/notas/lote/', payload, format='json')
+        force_authenticate(request, user=self.user_avaliador2)
+        response = view(request)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('avaliador', response.data)
+
+    def test_batch_nota_fails_cross_edition_criterio(self):
+        view = NotaViewSet.as_view({'post': 'lote'})
+        payload = {
+            'avaliador': self.avaliador_edicao1.id,
+            'projeto': self.projeto1.id,
+            'notas': [
+                {'criterio': self.criterio1_ed2.id, 'nota': '8.50'}
+            ]
+        }
+        request = self.factory.post('/api/notas/lote/', payload, format='json')
+        force_authenticate(request, user=self.user_avaliador1)
+        response = view(request)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('notas', response.data)
+
+    def test_batch_nota_fails_duplicate_criterio_in_payload(self):
+        view = NotaViewSet.as_view({'post': 'lote'})
+        payload = {
+            'avaliador': self.avaliador_edicao1.id,
+            'projeto': self.projeto1.id,
+            'notas': [
+                {'criterio': self.criterio1_ed1.id, 'nota': '8.50'},
+                {'criterio': self.criterio1_ed1.id, 'nota': '9.00'}
+            ]
+        }
+        request = self.factory.post('/api/notas/lote/', payload, format='json')
+        force_authenticate(request, user=self.user_avaliador1)
+        response = view(request)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('notas', response.data)
+        self.assertIn('duplicados', str(response.data['notas']))
+
+    def test_batch_nota_fails_when_criterion_already_evaluated(self):
+        Nota.objects.create(
+            avaliador=self.avaliador_edicao1,
+            projeto=self.projeto1,
+            criterio=self.criterio1_ed1,
+            nota=Decimal('7.00')
+        )
+        view = NotaViewSet.as_view({'post': 'lote'})
+        payload = {
+            'avaliador': self.avaliador_edicao1.id,
+            'projeto': self.projeto1.id,
+            'notas': [
+                {'criterio': self.criterio1_ed1.id, 'nota': '8.50'},
+                {'criterio': self.criterio2_ed1.id, 'nota': '9.00'}
+            ]
+        }
+        request = self.factory.post('/api/notas/lote/', payload, format='json')
+        force_authenticate(request, user=self.user_avaliador1)
+        response = view(request)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('notas', response.data)
+        self.assertFalse(Nota.objects.filter(avaliador=self.avaliador_edicao1, criterio=self.criterio2_ed1).exists())
+
+    def test_model_clean_validation(self):
+        from django.core.exceptions import ValidationError
+
+        # Avaliador de outra edição
+        n_invalida1 = Nota(
+            avaliador=self.avaliador_edicao2,
+            projeto=self.projeto1,
+            criterio=self.criterio1_ed1,
+            nota=Decimal('8.00')
+        )
+        with self.assertRaises(ValidationError) as cm:
+            n_invalida1.save()
+        self.assertIn('avaliador', cm.exception.message_dict)
+
+        # Critério de outra edição
+        n_invalida2 = Nota(
+            avaliador=self.avaliador_edicao1,
+            projeto=self.projeto1,
+            criterio=self.criterio1_ed2,
+            nota=Decimal('8.00')
+        )
+        with self.assertRaises(ValidationError) as cm:
+            n_invalida2.save()
+        self.assertIn('criterio', cm.exception.message_dict)
+
+        # Sucesso
+        n_valida = Nota.objects.create(
+            avaliador=self.avaliador_edicao1,
+            projeto=self.projeto1,
+            criterio=self.criterio1_ed1,
+            nota=Decimal('8.00')
+        )
+        self.assertIsNotNone(n_valida.id)
+
+        # Duplicata
+        n_duplicada = Nota(
+            avaliador=self.avaliador_edicao1,
+            projeto=self.projeto1,
+            criterio=self.criterio1_ed1,
+            nota=Decimal('9.00')
+        )
+        with self.assertRaises(ValidationError) as cm:
+            n_duplicada.save()
+        self.assertIn('__all__', cm.exception.message_dict)
+
+    def test_projeto_notafinal_decimal(self):
+        self.projeto1.notaFinal_projeto = Decimal('9.75')
+        self.projeto1.save()
+        self.projeto1.refresh_from_db()
+        self.assertEqual(self.projeto1.notaFinal_projeto, Decimal('9.75'))

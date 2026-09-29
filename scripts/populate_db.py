@@ -152,7 +152,7 @@ def populate():
 
     # 10. AvaliadorEdicao
     print("Associando Avaliadores às Edições...")
-    AvaliadorEdicao.objects.get_or_create(
+    avaliador_edicao, _ = AvaliadorEdicao.objects.get_or_create(
         avaliador=user2,
         edicao=edicao_2024
     )
@@ -162,11 +162,13 @@ def populate():
     Nota.objects.get_or_create(
         projeto=projeto_saude,
         criterio=criterio_inovacao,
+        avaliador=avaliador_edicao,
         defaults={'nota': Decimal('8.50'), 'comentario_nota': 'Boa ideia, mas pode melhorar.'}
     )
     Nota.objects.get_or_create(
         projeto=projeto_saude,
         criterio=criterio_usabilidade,
+        avaliador=avaliador_edicao,
         defaults={'nota': Decimal('9.00'), 'comentario_nota': 'Interface muito bonita.'}
     )
 
