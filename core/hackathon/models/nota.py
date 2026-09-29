@@ -13,8 +13,8 @@ class Nota(models.Model):
         ]
     )
     comentario_nota = models.TextField(blank=True, null=True)
-    projeto = models.ForeignKey('Projeto', on_delete=models.CASCADE, related_name="notas", blank=False, null=False)
-    criterio = models.ForeignKey('Criterio', on_delete=models.CASCADE, related_name="notas", blank=False, null=False)
+    projeto = models.ForeignKey('Projeto', on_delete=models.PROTECT, related_name="notas", blank=False, null=False)
+    criterio = models.ForeignKey('Criterio', on_delete=models.PROTECT, related_name="notas", blank=False, null=False)
     avaliador = models.ForeignKey('AvaliadorEdicao', on_delete=models.PROTECT, related_name="notas", blank=False, null=False)
 
     def clean(self):
