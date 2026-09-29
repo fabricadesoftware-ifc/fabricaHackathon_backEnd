@@ -7,7 +7,12 @@ from .tema import TemaSerializer
 from .projeto import ProjetoListSerializer, ProjetoSerializer
 from .equipe import EquipeListSerializer, EquipeSerializer
 from .participanteEquipe import ParticipanteEquipeSerializer, ParticipanteEquipeListSerializer
-from .nota import NotaSerializer, NotaListSerializer
+from .nota import (
+    NotaSerializer,
+    NotaListSerializer,
+    ItemNotaLoteSerializer,
+    NotaLoteSerializer,
+)
 from .avaliadorEdicao import (
     AvaliadorSerializer,
     AvaliadorListSerializer,
@@ -31,6 +36,8 @@ __all__ = [
     "EquipeSerializer",
     "NotaSerializer",
     "NotaListSerializer",
+    "ItemNotaLoteSerializer",
+    "NotaLoteSerializer",
     "ParticipanteEquipeSerializer",
     "ParticipanteEquipeListSerializer",
     "AvaliadorSerializer",
