@@ -1,5 +1,4 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from ..models import User
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
