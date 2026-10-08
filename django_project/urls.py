@@ -20,6 +20,7 @@ from core.hackathon.views import (
     NotaViewSet,
     ParticipanteEquipeViewSet,
     AvaliadorEdicaoViewSet,
+    CustomTokenObtainPairView
 )
 
 router = DefaultRouter()
@@ -38,6 +39,6 @@ router.register(r'avaliadores', AvaliadorEdicaoViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh', TokenRefreshView.as_view(), name='token_refresh')
 ]
