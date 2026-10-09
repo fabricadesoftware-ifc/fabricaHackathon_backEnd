@@ -9,6 +9,7 @@ from .equipe import EquipeViewSet
 from .nota import NotaViewSet
 from .participanteEquipe import ParticipanteEquipeViewSet
 from .avaliadorEdicao import AvaliadorViewSet, AvaliadorEdicaoViewSet
+from .token import CustomTokenObtainPairView
 
 __all__ = [
     "ApoiadorViewSet",
@@ -23,4 +24,5 @@ __all__ = [
     "ParticipanteEquipeViewSet",
     "AvaliadorViewSet",
     "AvaliadorEdicaoViewSet",
+    'CustomTokenObtainPairView'
 ]

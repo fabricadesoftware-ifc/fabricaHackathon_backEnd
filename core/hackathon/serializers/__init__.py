@@ -7,6 +7,7 @@ from .tema import TemaSerializer
 from .projeto import ProjetoListSerializer, ProjetoSerializer
 from .equipe import EquipeListSerializer, EquipeSerializer
 from .participanteEquipe import ParticipanteEquipeSerializer, ParticipanteEquipeListSerializer
+from .token import CustomTokenObtainPairSerializer
 from .nota import (
     NotaSerializer,
     NotaListSerializer,
@@ -44,4 +45,5 @@ __all__ = [
     "AvaliadorListSerializer",
     "AvaliadorEdicaoSerializer",
     "AvaliadorEdicaoListSerializer",
+    'CustomTokenObtainPairSerializer'
 ]
