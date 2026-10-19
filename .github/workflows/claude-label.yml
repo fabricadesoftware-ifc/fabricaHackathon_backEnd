@@ -1,0 +1,60 @@
+name: Claude por label
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  claude:
+    if: github.event.label.name == 'claude'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
+      id-token: write
+    steps:
+      - name: Checkout da dev com histórico e todas as branches
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Instalar PDM e dependências
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: "3.12"
+          cache: true
+
+      - run: pdm install --no-self
+
+      - name: Executar Claude Code
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Você está trabalhando no repositório ${{ github.repository }}.
+            Execute a issue #${{ github.event.issue.number }}.
+
+            Título: ${{ github.event.issue.title }}
+
+            Descrição:
+            ${{ github.event.issue.body }}
+
+            Contexto técnico:
+            - Backend Django + Django REST Framework + SimpleJWT, gerenciado com PDM.
+            - O código de desenvolvimento está na branch `dev` (a `main` só tem os workflows). Novas branches saem da `dev` e os PRs apontam para a `dev`.
+            - Rode os testes com `pdm run test` (equivale a `python manage.py test`).
+            - Também use `pdm run python manage.py check` e `pdm run python manage.py makemigrations --check --dry-run`.
+            - Nunca rode `migrate` contra banco de produção nem leia/imprima arquivos .env.
+
+            Regras:
+            - Se a issue for apenas de análise, NÃO altere código; responda com um comentário na própria issue.
+            - Se a issue pedir correções, crie uma branch nova a partir da `dev`, faça commits pequenos e descritivos, rode os testes e abra um PR para a `dev` referenciando a issue.
+            - Nunca faça push direto na `main` ou na `dev` e nunca faça merge de PRs. A revisão e o merge são feitos por um humano.
+          claude_args: |
+            --allowedTools "Bash(git:*),Bash(pdm:*),Bash(python:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue view:*),Bash(gh issue comment:*)"
