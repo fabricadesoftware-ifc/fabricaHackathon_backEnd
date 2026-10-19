@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import path, include
 
 from rest_framework.routers import DefaultRouter
@@ -20,6 +21,12 @@ from core.hackathon.views import (
     CustomTokenObtainPairView,
 )
 
+
+
+def health(request):
+    return JsonResponse({"status": "ok"})
+
+
 router = DefaultRouter()
 router.register(r"apoiadores", ApoiadorViewSet)
 router.register(r"tipos-edicao", TipoEdicaoViewSet)
@@ -35,6 +42,7 @@ router.register(r"avaliadores", AvaliadorEdicaoViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/health/", health, name="health"),
     path("api/", include(router.urls)),
     path("api/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
