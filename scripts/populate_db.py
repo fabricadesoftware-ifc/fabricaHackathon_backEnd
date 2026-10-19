@@ -172,6 +172,65 @@ def populate():
         defaults={'nota': Decimal('9.00'), 'comentario_nota': 'Interface muito bonita.'}
     )
 
+    # 12. Edições extras: uma em cada status, para o front ver todos os cenários
+    print("Criando edições de exemplo (uma por status)...")
+    edicao_2024.local = edicao_2024.local or 'Campus Videira - IFC'
+    edicao_2024.responsavel = edicao_2024.responsavel or 'Fábrica de Software'
+    edicao_2024.save()
+
+    hoje = date.today()
+    exemplos = [
+        # nome, ano, status, tipo, inicio, equipes: (equipe, tema, projeto, descricao, nota)
+        ('Hackathon Andamento 2025', 2025, 'EM_ANDAMENTO', tipo_presencial, hoje - timedelta(days=1), [
+            ('Code Rangers', 'Cidades Inteligentes', 'Rota Certa', 'Otimização de rotas do transporte público.', None),
+            ('Bit Builders', 'Agro Tech', 'Campo Digital', 'Gestão de pequenas propriedades rurais.', None),
+        ]),
+        ('Hackathon Avaliação 2023', 2023, 'AVALIACAO', tipo_online, hoje - timedelta(days=60), [
+            ('Neurônios', 'Inclusão Digital', 'Acessa+', 'Acessibilidade em sites públicos.', Decimal('8.70')),
+            ('Pixel Squad', 'Sustentabilidade', 'EcoTrack', 'Pegada de carbono pessoal.', Decimal('9.10')),
+        ]),
+        ('Hackathon Finalizado 2022', 2022, 'FINALIZADO', tipo_hibrido, hoje - timedelta(days=400), [
+            ('Os Compiladores', 'Educação', 'Estuda Fácil', 'Reforço escolar com gamificação.', Decimal('9.40')),
+            ('Debug Team', 'Saúde', 'Posto Online', 'Agendamento em postos de saúde.', Decimal('9.40')),
+            ('Stack Overflowers', 'Finanças', 'Poupa Já', 'Educação financeira para jovens.', Decimal('8.20')),
+        ]),
+    ]
+    for nome, ano, status, tipo, inicio, equipes in exemplos:
+        edicao, created = Edicao.objects.get_or_create(
+            nome=nome,
+            ano=ano,
+            defaults={
+                'descricao': f'Edição de exemplo no status {status}.',
+                'status': status,
+                'data_inicio': inicio,
+                'data_fim': inicio + timedelta(days=3),
+                'local': 'Campus Videira - IFC',
+                'responsavel': 'Fábrica de Software',
+                'minimo_participantes': 3,
+                'maximo_participantes': 5,
+                'maximo_equipes': 20,
+                'tipo_edicao': tipo,
+            },
+        )
+        if created:
+            edicao.apoiadores.add(apoiador1, apoiador2)
+        for criterio in ('Inovação', 'Usabilidade', 'Impacto Social'):
+            Criterio.objects.get_or_create(nome=criterio, edicao=edicao)
+        for nome_equipe, tema_desc, nome_projeto, descricao, nota in equipes:
+            tema, _ = Tema.objects.get_or_create(descricao_tema=tema_desc, edicao=edicao)
+            projeto, _ = Projeto.objects.get_or_create(
+                nome_projeto=nome_projeto,
+                edicao=edicao,
+                defaults={
+                    'descricao_projeto': descricao,
+                    'link_deploy_projeto': f'https://{nome_projeto.lower().replace(" ", "").replace("+", "mais")}.example.com',
+                    'notaFinal_projeto': nota,
+                },
+            )
+            Equipe.objects.get_or_create(
+                nome_equipe=nome_equipe, edicao=edicao, defaults={'tema': tema, 'projeto': projeto}
+            )
+
     print("Banco de dados populado com sucesso!")
 
 if __name__ == '__main__':

@@ -545,8 +545,8 @@ class AvaliadorEdicaoValidationTests(TestCase):
         force_authenticate(req_list, user=self.user_admin)
         res_list = view_list(req_list)
         self.assertEqual(res_list.status_code, 200)
-        self.assertEqual(len(res_list.data), 1)
-        self.assertEqual(res_list.data[0]['id'], avaliador_id)
+        self.assertEqual(res_list.data['count'], 1)
+        self.assertEqual(res_list.data['results'][0]['id'], avaliador_id)
 
         # 3. DETAIL (GET)
         view_detail = AvaliadorViewSet.as_view({'get': 'retrieve'})
