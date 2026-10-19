@@ -31,6 +31,7 @@ jobs:
       - run: pdm install --no-self
 
       - name: Executar Claude Code
+        id: claude
         uses: anthropics/claude-code-action@v1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,7 +57,42 @@ jobs:
             - Se a issue for apenas de análise, NÃO altere código; responda com um comentário na própria issue.
             - Se a issue pedir correções, crie uma branch nova a partir da `dev`, faça commits pequenos e descritivos, rode os testes e abra um PR para a `dev` referenciando a issue.
             - Nunca faça push direto na `main` ou na `dev` e nunca faça merge de PRs. A revisão e o merge são feitos por um humano.
+            - Ao terminar as correções, tente abrir o PR você mesmo com `gh pr create --base dev` (título com o número da issue e corpo com `Closes #<número>`). Se o comando falhar, copie a mensagem de erro exata no seu comentário final.
           track_progress: true
           claude_args: |
             --max-turns 80
             --allowedTools "Read,Glob,Grep,Edit,MultiEdit,Write,Bash(git:*),Bash(pdm:*),Bash(python:*),Bash(ls:*),Bash(cat:*),Bash(mkdir:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue view:*),Bash(gh issue comment:*)"
+
+      - name: Abrir PR para a dev (se o Claude criou branch com commits)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_OUTPUT: ${{ steps.claude.outputs.branch_name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          set -euo pipefail
+          git fetch origin dev '+refs/heads/claude/*:refs/remotes/origin/claude/*'
+          BRANCH="${BRANCH_OUTPUT:-}"
+          if [ -z "$BRANCH" ]; then
+            BRANCH=$(git branch -r --sort=-committerdate --list "origin/claude/issue-${ISSUE_NUMBER}-*" | head -1 | sed 's#^ *origin/##')
+          fi
+          if [ -z "$BRANCH" ]; then
+            echo "Nenhuma branch do Claude para a issue #${ISSUE_NUMBER}; nada a fazer."
+            exit 0
+          fi
+          if [ "$(git rev-list --count "origin/dev..origin/${BRANCH}")" -eq 0 ]; then
+            echo "A branch ${BRANCH} não tem commits novos em relação à dev; PR não necessário."
+            exit 0
+          fi
+          EXISTING=$(gh pr list --head "$BRANCH" --base dev --state open --json url --jq '.[0].url // empty')
+          if [ -n "$EXISTING" ]; then
+            echo "PR já existe: $EXISTING"
+            exit 0
+          fi
+          URL=$(gh pr create --base dev --head "$BRANCH" \
+            --title "${ISSUE_TITLE} (#${ISSUE_NUMBER})" \
+            --body "Closes #${ISSUE_NUMBER}
+
+          PR aberto automaticamente pelo workflow após a execução do Claude. Revise o comentário da issue (decisões e resultado dos testes) antes do merge.")
+          echo "PR aberto: $URL"
+          gh issue comment "$ISSUE_NUMBER" --body "PR aberto automaticamente: $URL"
