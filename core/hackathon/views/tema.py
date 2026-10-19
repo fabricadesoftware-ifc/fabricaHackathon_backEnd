@@ -1,8 +1,10 @@
 from rest_framework.viewsets import ModelViewSet
 from ..models import Tema
+from ..permissions import IsAdminOrReadOnly
 from ..serializers import TemaSerializer
 
 class TemaViewSet(ModelViewSet):
+    permission_classes = [IsAdminOrReadOnly]
     queryset = Tema.objects.all()
     serializer_class = TemaSerializer
 

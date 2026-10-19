@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from ..models import Nota
+from ..permissions import IsAvaliadorDaEdicaoOrReadOnly
 from ..serializers import (
     NotaSerializer,
     NotaListSerializer,
@@ -10,6 +11,7 @@ from ..serializers import (
 )
 
 class NotaViewSet(ModelViewSet):
+    permission_classes = [IsAvaliadorDaEdicaoOrReadOnly]
     queryset = Nota.objects.all()
     serializer_class = NotaSerializer
 
