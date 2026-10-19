@@ -180,8 +180,8 @@ class UserAbstractUserValidationTests(TestCase):
         force_authenticate(request, user=self.user_participante)
 
         response = view(request)
-        self.assertEqual(response.status_code, 400)
-        self.assertIn('tipoUser', response.data)
+        # Agora a permissão barra antes da validação do serializer
+        self.assertEqual(response.status_code, 403)
 
 
 class ParticipanteEquipeValidationTests(TestCase):
@@ -286,7 +286,7 @@ class ParticipanteEquipeValidationTests(TestCase):
             'user': self.user_avaliador.id,
             'equipe': self.equipe.id
         }, format='json')
-        force_authenticate(request, user=self.user_participante)
+        force_authenticate(request, user=self.user_admin)
 
         response = view(request)
         self.assertEqual(response.status_code, 400)
@@ -397,7 +397,7 @@ class ParticipanteEquipeValidationTests(TestCase):
             'user': self.user_participante.id,
             'equipe': equipe2.id
         }, format='json')
-        force_authenticate(request, user=self.user_participante)
+        force_authenticate(request, user=self.user_admin)
 
         response = view(request)
         self.assertEqual(response.status_code, 400)
