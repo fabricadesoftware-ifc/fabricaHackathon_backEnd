@@ -2,15 +2,17 @@ from rest_framework import serializers
 from ..models import User
 from ..permissions import is_admin
 from ..validations.user_validation import validate_user_tipo
+from .imagem import LimpaImagensAntigasMixin
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(LimpaImagensAntigasMixin, serializers.ModelSerializer):
+    campos_imagem = ('foto_perfil',)
     password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
         fields = [
             'id', 'username', 'password', 'first_name', 'last_name',
-            'email', 'tipoUser', 'is_active', 'date_joined'
+            'email', 'tipoUser', 'foto_perfil', 'is_active', 'date_joined'
         ]
         read_only_fields = ['id', 'is_active', 'date_joined']
 
@@ -48,4 +50,4 @@ class UserSerializer(serializers.ModelSerializer):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'tipoUser']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'tipoUser', 'foto_perfil']
