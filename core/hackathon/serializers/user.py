@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from ..models import User
+from ..permissions import is_admin
 from ..validations.user_validation import validate_user_tipo
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,6 +20,13 @@ class UserSerializer(serializers.ModelSerializer):
         if request:
             request_user = getattr(request, 'user', None) or getattr(request, '_force_auth_user', None)
         validate_user_tipo(value, request_user)
+        # Não administradores nunca alteram o próprio tipoUser.
+        if (
+            self.instance is not None
+            and value != self.instance.tipoUser
+            and not is_admin(request_user)
+        ):
+            raise serializers.ValidationError("Você não pode alterar o tipo de usuário.")
         return value
 
     def create(self, validated_data):

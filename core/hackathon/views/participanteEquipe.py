@@ -1,8 +1,10 @@
 from rest_framework.viewsets import ModelViewSet
 from ..models import ParticipanteEquipe
+from ..permissions import IsAdminOrReadOnly
 from ..serializers import ParticipanteEquipeSerializer, ParticipanteEquipeListSerializer
 
 class ParticipanteEquipeViewSet(ModelViewSet):
+    permission_classes = [IsAdminOrReadOnly]
     queryset = ParticipanteEquipe.objects.all()
     serializer_class = ParticipanteEquipeSerializer
 
