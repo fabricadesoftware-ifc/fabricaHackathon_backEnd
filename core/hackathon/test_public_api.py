@@ -117,13 +117,15 @@ class ContratoTests(PublicApiTestCase):
         self.assertEqual(item, {
             'id': self.edicao.id, 'nome': 'Hack Alpha', 'ano': 2026, 'status': 'INSCRICAO',
             'status_label': 'Inscrição', 'data_inicio': '2026-05-01', 'data_fim': '2026-05-04',
-            'local': 'Sala 1', 'responsavel': 'Fulano', 'tipo_edicao': 'Presencial',
+            'local': 'Sala 1', 'responsavel': 'Fulano', 'imagem_capa': None, 'tipo_edicao': 'Presencial',
             'total_equipes': 1,
         })
 
     def test_detalhe_da_edicao(self):
         body = self.client.get(f'/api/edicoes/{self.edicao.id}/').json()
-        self.assertEqual(body['apoiadores'], [{'id': self.apoiador.id, 'nome': 'TechCorp', 'tipo': 'ouro'}])
+        self.assertEqual(body['apoiadores'], [
+            {'id': self.apoiador.id, 'nome': 'TechCorp', 'tipo': 'ouro', 'logo_apoiador': None}
+        ])
         self.assertEqual(body['criterios'], [{'id': self.criterio.id, 'nome': 'Inovação'}])
         self.assertEqual(body['temas'], [{'id': self.tema.id, 'descricao_tema': 'Saúde'}])
         self.assertEqual(body['maximo_equipes'], 10)

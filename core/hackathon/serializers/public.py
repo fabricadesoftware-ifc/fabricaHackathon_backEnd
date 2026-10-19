@@ -32,7 +32,14 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Projeto
-        fields = ["id", "nome_projeto", "descricao_projeto", "link_deploy_projeto", "nota_final"]
+        fields = [
+            "id",
+            "nome_projeto",
+            "descricao_projeto",
+            "link_deploy_projeto",
+            "logo_projeto",
+            "nota_final",
+        ]
 
     def get_nota_final(self, projeto):
         return nota_final_publica(projeto)
@@ -58,6 +65,7 @@ class ProjetoPublicSerializer(serializers.ModelSerializer):
             "nome_projeto",
             "descricao_projeto",
             "link_deploy_projeto",
+            "logo_projeto",
             "edicao",
             "nome_equipe",
             "nota_final",

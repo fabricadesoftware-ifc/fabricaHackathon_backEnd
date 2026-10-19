@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from ..validations.imagem_validation import validate_imagem
 
 class tipoUser(models.TextChoices):
     participante = 'PARTICIPANTE', 'Participante'
@@ -9,6 +10,7 @@ class tipoUser(models.TextChoices):
 class User(AbstractUser):
     email = models.EmailField(unique=True, null=False, blank=False)
     tipoUser = models.CharField(max_length=20, choices=tipoUser.choices, default=tipoUser.participante)
+    foto_perfil = models.ImageField(upload_to='hackathon/usuarios/', null=True, blank=True, validators=[validate_imagem])
 
     class Meta(AbstractUser.Meta):
         verbose_name = 'Usuário'

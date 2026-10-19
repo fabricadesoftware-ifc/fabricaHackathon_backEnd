@@ -2,7 +2,9 @@ from rest_framework import serializers
 from ..models import Edicao
 from ..validations.edicao_validation import validate_edicao
 from ..serializers import ApoiadorListSerializer
-class EdicaoSerializer(serializers.ModelSerializer):
+from .imagem import LimpaImagensAntigasMixin
+class EdicaoSerializer(LimpaImagensAntigasMixin, serializers.ModelSerializer):
+    campos_imagem = ("imagem_capa",)
     apoiadores = ApoiadorListSerializer(many=True, read_only=True)
 
     class Meta:
@@ -17,6 +19,7 @@ class EdicaoSerializer(serializers.ModelSerializer):
             "data_fim",
             "local",
             "responsavel",
+            "imagem_capa",
             "minimo_participantes",
             "maximo_participantes",
             "maximo_equipes",
@@ -44,6 +47,7 @@ class EdicaoListSerializer(serializers.ModelSerializer):
             "data_fim",
             "local",
             "responsavel",
+            "imagem_capa",
             "tipo_edicao",
             "total_equipes",
         ]

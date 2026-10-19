@@ -13,7 +13,7 @@ Base: `/api/`. Nenhum desses endpoints devolve participantes, usuários ou e-mai
 - **Filtro inválido:** devolve `400` com a mensagem do campo (ex.: `{"ano": "Informe um número inteiro."}`); filtro válido sem resultado devolve lista vazia. Nunca `500`.
 - **Limite:** usuários anônimos têm limite de requisições (padrão `120/min`, variável `ANON_THROTTLE_RATE`). Acima disso, `429`.
 - **CORS:** origens liberadas via `CORS_ALLOWED_ORIGINS` (padrão `http://localhost:3000,http://localhost:5173`).
-- **Imagem:** ainda não existe campo de imagem (fica para a issue #35).
+- **Imagens:** `imagem_capa` (edição), `logo_apoiador` (apoiador) e `logo_projeto` (projeto, inclusive dentro de equipe) vêm como URL absoluta ou `null`. `foto_perfil` de usuário nunca aparece nas respostas públicas. Detalhes de upload, formatos (JPEG, PNG, WebP), limite (5 MB) e `curl` na seção "Imagens" do `README.md`.
 
 ### Mapeamento para o mock do front
 
