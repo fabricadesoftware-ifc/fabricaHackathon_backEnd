@@ -22,6 +22,9 @@ class Edicao(models.Model):
     data_inicio = models.DateField(null=False, blank=False)
     data_fim = models.DateField(null=False, blank=False)
     
+    local = models.CharField(blank=True, max_length=100)
+    responsavel = models.CharField(blank=True, max_length=100)
+
     minimo_participantes = models.PositiveIntegerField(null=False, blank=False)
     maximo_participantes = models.PositiveIntegerField(null=False, blank=False)
     maximo_equipes = models.PositiveIntegerField(null=False, blank=False)
