@@ -303,3 +303,10 @@ class DesempenhoTests(PublicApiTestCase):
         with mock.patch.dict(AnonRateThrottle.THROTTLE_RATES, {'anon': '2/min'}):
             codigos = [self.client.get('/api/edicoes/').status_code for _ in range(3)]
         self.assertEqual(codigos, [200, 200, 429])
+
+
+class HealthCheckTests(TestCase):
+    def test_health_publico(self):
+        resp = self.client.get("/api/health/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json(), {"status": "ok"})
