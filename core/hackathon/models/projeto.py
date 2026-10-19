@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from .edicao import Edicao
 from .tema import Tema
+from ..validations.imagem_validation import validate_imagem
 
 class Projeto(models.Model):
     nome_projeto = models.CharField(max_length=100, blank=False, null=False)
@@ -17,6 +18,7 @@ class Projeto(models.Model):
             MaxValueValidator(10)
         ]
     )
+    logo_projeto = models.ImageField(upload_to='hackathon/projetos/', null=True, blank=True, validators=[validate_imagem])
     edicao = models.ForeignKey(Edicao, on_delete=models.PROTECT, related_name="projetos", blank=False, null=False)
 
     def __str__(self):

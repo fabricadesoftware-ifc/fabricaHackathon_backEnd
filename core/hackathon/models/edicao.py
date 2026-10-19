@@ -3,6 +3,7 @@ from django.db import models
 from .tipo_edicao import TipoEdicao
 from .apoiador import Apoiador
 from django.core.exceptions import ValidationError
+from ..validations.imagem_validation import validate_imagem
 
 class Edicao(models.Model):
     
@@ -24,6 +25,7 @@ class Edicao(models.Model):
     
     local = models.CharField(blank=True, max_length=100)
     responsavel = models.CharField(blank=True, max_length=100)
+    imagem_capa = models.ImageField(upload_to='hackathon/edicoes/', null=True, blank=True, validators=[validate_imagem])
 
     minimo_participantes = models.PositiveIntegerField(null=False, blank=False)
     maximo_participantes = models.PositiveIntegerField(null=False, blank=False)
