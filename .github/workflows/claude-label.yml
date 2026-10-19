@@ -56,5 +56,7 @@ jobs:
             - Se a issue for apenas de análise, NÃO altere código; responda com um comentário na própria issue.
             - Se a issue pedir correções, crie uma branch nova a partir da `dev`, faça commits pequenos e descritivos, rode os testes e abra um PR para a `dev` referenciando a issue.
             - Nunca faça push direto na `main` ou na `dev` e nunca faça merge de PRs. A revisão e o merge são feitos por um humano.
+          track_progress: true
           claude_args: |
-            --allowedTools "Bash(git:*),Bash(pdm:*),Bash(python:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue view:*),Bash(gh issue comment:*)"
+            --max-turns 80
+            --allowedTools "Read,Glob,Grep,Edit,MultiEdit,Write,Bash(git:*),Bash(pdm:*),Bash(python:*),Bash(ls:*),Bash(cat:*),Bash(mkdir:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue view:*),Bash(gh issue comment:*)"
