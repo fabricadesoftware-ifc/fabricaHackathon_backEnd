@@ -56,7 +56,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "cloudinary_storage",  # deve vir antes de django.contrib.staticfiles
     "django.contrib.staticfiles",
+    "cloudinary",
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
@@ -174,3 +176,24 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+
+# Arquivos de mídia (imagens enviadas)
+# Com CLOUDINARY_URL (cloudinary://API_KEY:API_SECRET@CLOUD_NAME) as imagens vão para o
+# Cloudinary; sem ela (desenvolvimento e testes) ficam em MEDIA_ROOT. O valor nunca é lido
+# nem impresso aqui: o SDK do Cloudinary o lê sozinho do ambiente.
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+STORAGES = {
+    "default": {
+        "BACKEND": (
+            "cloudinary_storage.storage.MediaCloudinaryStorage"
+            if os.environ.get("CLOUDINARY_URL")
+            else "django.core.files.storage.FileSystemStorage"
+        ),
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
