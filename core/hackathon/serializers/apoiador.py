@@ -3,11 +3,11 @@ from rest_framework.serializers import ModelSerializer
 from ..models import Apoiador
 
 class ApoiadorSerializer(ModelSerializer):
-    class Meta: 
+    class Meta:
         model = Apoiador
-        fields = ['nome', 'tipo']
+        fields = ['id', 'nome', 'tipo']
 
 class ApoiadorListSerializer(ModelSerializer):
-    class Meta: 
+    class Meta:
         model = Apoiador
-        fields = ['nome']
+        fields = ['id', 'nome', 'tipo']

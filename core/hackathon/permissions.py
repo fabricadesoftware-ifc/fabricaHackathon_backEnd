@@ -38,6 +38,19 @@ class IsAdminOrReadOnly(BasePermission):
         return is_admin(request.user)
 
 
+class ReadOnlyOrAuthenticated(BasePermission):
+    """
+    Leitura pública (GET/HEAD/OPTIONS sem token). Qualquer outro método exige
+    autenticação e segue a regra de perfil: apenas administradores escrevem.
+    Anônimo em escrita recebe 401; autenticado que não é admin recebe 403.
+    """
+
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        return is_admin(request.user)
+
+
 class IsAdminOrSelf(BasePermission):
     """Administrador acessa qualquer usuário; os demais apenas o próprio registro."""
 

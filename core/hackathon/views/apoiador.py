@@ -1,20 +1,10 @@
-from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 
 from ..models import Apoiador
-from ..permissions import IsAdminOrReadOnly
-from ..serializers import ApoiadorSerializer, ApoiadorListSerializer
+from ..permissions import ReadOnlyOrAuthenticated
+from ..serializers import ApoiadorSerializer
 
 class ApoiadorViewSet(ModelViewSet):
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [ReadOnlyOrAuthenticated]
     queryset = Apoiador.objects.all()
-
-    def get_serializer_class(self):
-        if self.action == "create":
-            return ApoiadorSerializer
-
-        elif self.action == "list":
-            return ApoiadorListSerializer
-
-        else:
-            return ApoiadorSerializer
+    serializer_class = ApoiadorSerializer
