@@ -109,6 +109,8 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         # Nos testes o limite é alto para a suíte não esgotar o cache compartilhado.
         "anon": os.environ.get("ANON_THROTTLE_RATE", "100000/min" if "test" in sys.argv else "120/min"),
+        "login": os.environ.get("LOGIN_THROTTLE_RATE", "100000/min" if "test" in sys.argv else "10/min"),
+        "registro": os.environ.get("REGISTRO_THROTTLE_RATE", "100000/hour" if "test" in sys.argv else "20/hour"),
     },
 }
 
