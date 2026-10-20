@@ -5,6 +5,7 @@ from ..validations.imagem_validation import validate_imagem
 class tipoUser(models.TextChoices):
     participante = 'PARTICIPANTE', 'Participante'
     avaliador = 'AVALIADOR', 'Avaliador'
+    professor = 'PROFESSOR', 'Professor'
     admin = 'ADMIN', 'Administrador'
 
 class User(AbstractUser):

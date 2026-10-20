@@ -2,7 +2,22 @@ from decimal import Decimal
 from django.db import transaction
 from rest_framework import serializers
 from ..models import Nota, AvaliadorEdicao, Projeto, Criterio
-from ..validations.nota_validation import validate_nota_edicao, validate_nota_unica
+from ..validations.nota_validation import (
+    validate_avaliacao_aberta,
+    validate_nota_edicao,
+    validate_nota_unica,
+)
+
+
+def resolver_avaliador(request, projeto):
+    """Vínculo AvaliadorEdicao do usuário autenticado com a edição do projeto."""
+    user = getattr(request, 'user', None)
+    vinculo = AvaliadorEdicao.objects.filter(avaliador=user, edicao_id=projeto.edicao_id).first()
+    if vinculo is None:
+        raise serializers.ValidationError(
+            {"avaliador": "Você não está vinculado como avaliador à edição deste projeto."}
+        )
+    return vinculo
 
 
 class NotaSerializer(serializers.ModelSerializer):
@@ -16,15 +31,30 @@ class NotaSerializer(serializers.ModelSerializer):
             "criterio",
             "avaliador",
         ]
+        read_only_fields = ["avaliador"]
 
     def validate(self, attrs):
-        avaliador = attrs.get('avaliador', getattr(self.instance, 'avaliador', None))
         projeto = attrs.get('projeto', getattr(self.instance, 'projeto', None))
         criterio = attrs.get('criterio', getattr(self.instance, 'criterio', None))
+        if self.instance is not None:
+            avaliador = self.instance.avaliador
+        else:
+            avaliador = resolver_avaliador(self.context.get('request'), projeto) if projeto else None
 
+        if projeto:
+            validate_avaliacao_aberta(projeto.edicao)
         validate_nota_edicao(avaliador, projeto, criterio)
         validate_nota_unica(avaliador, projeto, criterio, instance=self.instance)
+        attrs['_avaliador'] = avaliador
         return attrs
+
+    def create(self, validated_data):
+        validated_data['avaliador'] = validated_data.pop('_avaliador')
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop('_avaliador', None)
+        return super().update(instance, validated_data)
 
 
 class NotaListSerializer(serializers.ModelSerializer):
@@ -51,41 +81,37 @@ class ItemNotaLoteSerializer(serializers.Serializer):
 
 
 class NotaLoteSerializer(serializers.Serializer):
-    avaliador = serializers.PrimaryKeyRelatedField(queryset=AvaliadorEdicao.objects.all())
     projeto = serializers.PrimaryKeyRelatedField(queryset=Projeto.objects.all())
     notas = ItemNotaLoteSerializer(many=True)
 
     def validate(self, attrs):
-        avaliador = attrs.get('avaliador')
         projeto = attrs.get('projeto')
         notas_data = attrs.get('notas', [])
+        avaliador = resolver_avaliador(self.context.get('request'), projeto)
+        attrs['avaliador'] = avaliador
+
+        validate_avaliacao_aberta(projeto.edicao)
 
         if not notas_data:
             raise serializers.ValidationError({"notas": "A lista de notas não pode ser vazia."})
 
-        # 1. Validação de edição entre avaliador e projeto
-        if avaliador.edicao_id != projeto.edicao_id:
-            raise serializers.ValidationError({
-                "avaliador": "O avaliador não pertence à mesma edição do projeto avaliado."
-            })
-
         criterios_ids = []
         for item in notas_data:
             criterio = item['criterio']
-            # 2. Critério deve pertencer à mesma edição do projeto
+            # Critério deve pertencer à mesma edição do projeto
             if criterio.edicao_id != projeto.edicao_id:
                 raise serializers.ValidationError({
                     "notas": f"O critério '{criterio.nome}' não pertence à edição do projeto avaliado."
                 })
             criterios_ids.append(criterio.id)
 
-        # 3. Não permitir critérios duplicados no mesmo lote
+        # Não permitir critérios duplicados no mesmo lote
         if len(criterios_ids) != len(set(criterios_ids)):
             raise serializers.ValidationError({
                 "notas": "Existem critérios duplicados no lote de notas enviado."
             })
 
-        # 4. Verificar se o avaliador já avaliou algum desses critérios para o projeto
+        # Verificar se o avaliador já avaliou algum desses critérios para o projeto
         notas_existentes = Nota.objects.filter(
             avaliador=avaliador,
             projeto=projeto,

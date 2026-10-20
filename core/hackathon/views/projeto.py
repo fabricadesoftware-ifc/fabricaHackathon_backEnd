@@ -3,10 +3,11 @@ from rest_framework.viewsets import ModelViewSet
 from ..models import Projeto
 from ..permissions import ReadOnlyOrAuthenticated
 from ..query_params import int_param
+from .mixins import BloqueiaEdicaoFinalizadaMixin
 from ..serializers import ProjetoSerializer
 from ..serializers.public import ProjetoPublicSerializer
 
-class ProjetoViewSet(ModelViewSet):
+class ProjetoViewSet(BloqueiaEdicaoFinalizadaMixin, ModelViewSet):
     permission_classes = [ReadOnlyOrAuthenticated]
     queryset = Projeto.objects.all()
     serializer_class = ProjetoSerializer

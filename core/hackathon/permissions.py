@@ -20,6 +20,30 @@ def is_avaliador(user):
     )
 
 
+def is_professor(user):
+    return bool(
+        user
+        and user.is_authenticated
+        and getattr(user, "tipoUser", None) == tipoUser.professor
+    )
+
+
+def is_participante(user):
+    return bool(
+        user
+        and user.is_authenticated
+        and not user.is_superuser
+        and getattr(user, "tipoUser", None) == tipoUser.participante
+    )
+
+
+class IsParticipante(BasePermission):
+    """Apenas usuários com perfil de Participante."""
+
+    def has_permission(self, request, view):
+        return is_participante(request.user)
+
+
 class IsAdmin(BasePermission):
     """Apenas administradores."""
 
