@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
@@ -41,10 +41,12 @@ class SolicitacaoPerfil(models.Model):
         self.decidida_por = decidida_por
         self.save(update_fields=['status', 'decidida_em', 'decidida_por'])
 
+    @transaction.atomic
     def aprovar(self, decidida_por):
         self._decidir(self.Status.APROVADA, decidida_por)
         self.usuario.tipoUser = self.perfil_solicitado
         self.usuario.save(update_fields=['tipoUser'])
 
+    @transaction.atomic
     def recusar(self, decidida_por):
         self._decidir(self.Status.RECUSADA, decidida_por)
