@@ -7,7 +7,8 @@ Base: `/api/`. Nenhum desses endpoints devolve participantes, usuários ou e-mai
 
 - `GET`, `HEAD` e `OPTIONS` são públicos em: `edicoes`, `tipos-edicao`, `apoiadores`, `temas`, `criterios`, `projetos` e `equipes`.
 - `POST`/`PUT`/`PATCH`/`DELETE` nesses recursos exigem token JWT de administrador (sem token: `401`; outro perfil: `403`).
-- Continuam privados (`401` sem token): `users`, `participantes-equipe`, `avaliadores`, `notas`.
+- Continuam privados (`401` sem token): `users`, `participantes-equipe`, `avaliadores`, `notas`. Cadastro, inscrição e "meus dados": ver [API_PRIVADA.md](API_PRIVADA.md).
+- `PATCH /api/edicoes/{id}/` só aceita avançar o `status` um passo por vez; edição `FINALIZADO` é somente leitura.
 - **Paginação** em todas as listas: `{ "count", "next", "previous", "results" }`, 8 itens por página. Use `?page=2` e `?page_size=` (máximo 100).
 - **Nota final:** `nota_final` é `null` enquanto a edição não estiver `FINALIZADO`. Valor vem como string com 2 casas (`"9.50"`).
 - **Filtro inválido:** devolve `400` com a mensagem do campo (ex.: `{"ano": "Informe um número inteiro."}`); filtro válido sem resultado devolve lista vazia. Nunca `500`.

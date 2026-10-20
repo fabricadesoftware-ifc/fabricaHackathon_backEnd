@@ -16,6 +16,7 @@ class ProjetoSerializer(LimpaImagensAntigasMixin, ModelSerializer):
             "notaFinal_projeto",
             "edicao"
         ]
+        read_only_fields = ["notaFinal_projeto"]
 
 class ProjetoListSerializer(ModelSerializer):
     class Meta:

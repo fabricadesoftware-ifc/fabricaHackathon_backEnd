@@ -8,12 +8,13 @@ from rest_framework.viewsets import ModelViewSet
 from ..models import Edicao, Equipe, Projeto
 from ..permissions import ReadOnlyOrAuthenticated
 from ..query_params import int_param
+from .mixins import BloqueiaEdicaoFinalizadaMixin
 from ..serializers import EdicaoSerializer
 from ..serializers import EdicaoListSerializer
 from ..serializers.public import EdicaoDetailPublicSerializer, RankingSerializer
 
 
-class EdicaoViewSet(ModelViewSet):
+class EdicaoViewSet(BloqueiaEdicaoFinalizadaMixin, ModelViewSet):
     permission_classes = [ReadOnlyOrAuthenticated]
     queryset = Edicao.objects.all()
     serializer_class = EdicaoSerializer
@@ -21,6 +22,12 @@ class EdicaoViewSet(ModelViewSet):
     search_fields = ["nome"]
     ordering_fields = ["data_inicio", "nome", "ano"]
     ordering = ["-data_inicio", "-id"]
+
+    def edicao_da_instancia(self, instance):
+        return instance
+
+    def edicao_dos_dados(self, validated_data):
+        return None
 
     def get_serializer_class(self):
         if self.action == 'list':

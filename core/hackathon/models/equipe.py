@@ -3,12 +3,14 @@ from django.core.exceptions import ValidationError
 from .edicao import Edicao
 from .projeto import Projeto
 from .tema import Tema
+from .user import User
 
 class Equipe(models.Model):
     nome_equipe = models.CharField(null=False, blank=False, max_length=50)
     edicao = models.ForeignKey(Edicao, on_delete=models.PROTECT, related_name='equipes',blank=False, null=False)
     tema = models.ForeignKey(Tema, on_delete=models.PROTECT, related_name="equipes", blank=False, null=False)
     projeto = models.OneToOneField(Projeto, on_delete=models.PROTECT, related_name="equipes", blank=False, null=False)
+    criador = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="equipes_criadas", blank=True, null=True)
     
     def clean(self):
         if self.pk and self.edicao_id:

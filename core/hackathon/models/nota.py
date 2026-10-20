@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from .avaliadorEdicao import AvaliadorEdicao
+from ..services.nota_final import recalcular_nota_final
 
 class Nota(models.Model):
     nota = models.DecimalField(
@@ -44,6 +45,13 @@ class Nota(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+        recalcular_nota_final(self.projeto)
+
+    def delete(self, *args, **kwargs):
+        projeto = self.projeto
+        resultado = super().delete(*args, **kwargs)
+        recalcular_nota_final(projeto)
+        return resultado
 
     def __str__(self):
         return f"{self.projeto} - {self.criterio}: {self.nota}"

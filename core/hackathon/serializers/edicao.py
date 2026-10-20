@@ -1,6 +1,10 @@
 from rest_framework import serializers
 from ..models import Edicao
-from ..validations.edicao_validation import validate_edicao
+from ..validations.edicao_validation import (
+    validate_edicao,
+    validate_limites_com_instancia,
+    validate_transicao_status,
+)
 from ..serializers import ApoiadorListSerializer
 from .imagem import LimpaImagensAntigasMixin
 class EdicaoSerializer(LimpaImagensAntigasMixin, serializers.ModelSerializer):
@@ -28,6 +32,8 @@ class EdicaoSerializer(LimpaImagensAntigasMixin, serializers.ModelSerializer):
         ]
 
     def validate(self, data):
+        validate_transicao_status(self.instance, data)
+        validate_limites_com_instancia(self.instance, data)
         return validate_edicao(data)
 
 class EdicaoListSerializer(serializers.ModelSerializer):

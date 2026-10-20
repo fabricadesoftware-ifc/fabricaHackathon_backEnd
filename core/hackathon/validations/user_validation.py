@@ -8,12 +8,12 @@ def validate_user_tipo(tipo_solicitado, request_user=None):
     Papéis restritos (ADMIN e AVALIADOR) só podem ser concedidos por
     um administrador autenticado.
     """
-    papeis_restritos = [tipoUser.admin, tipoUser.avaliador]
+    papeis_restritos = [tipoUser.admin, tipoUser.avaliador, tipoUser.professor]
 
     if tipo_solicitado in papeis_restritos:
         if not request_user or not request_user.is_authenticated:
             raise serializers.ValidationError(
-                "Apenas administradores podem atribuir perfis de Avaliador ou Administrador."
+                "Apenas administradores podem atribuir perfis de Avaliador, Professor ou Administrador."
             )
 
         is_admin = (

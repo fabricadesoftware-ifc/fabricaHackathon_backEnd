@@ -583,7 +583,7 @@ class NotaValidationTests(TestCase):
         self.edicao1 = Edicao.objects.create(
             nome='Hackathon 2026',
             ano=2026,
-            status='INSCRICAO',
+            status='AVALIACAO',
             data_inicio=date.today(),
             data_fim=date.today() + timedelta(days=3),
             minimo_participantes=2,
@@ -594,7 +594,7 @@ class NotaValidationTests(TestCase):
         self.edicao2 = Edicao.objects.create(
             nome='Hackathon 2027',
             ano=2027,
-            status='INSCRICAO',
+            status='AVALIACAO',
             data_inicio=date.today() + timedelta(days=365),
             data_fim=date.today() + timedelta(days=368),
             minimo_participantes=2,
@@ -690,7 +690,7 @@ class NotaValidationTests(TestCase):
         response = view(request)
         self.assertEqual(response.status_code, 400)
         self.assertIn('avaliador', response.data)
-        self.assertIn('não pertence à mesma edição', str(response.data['avaliador']))
+        self.assertIn('não está vinculado', str(response.data['avaliador']))
 
     def test_single_nota_fails_when_criterio_from_different_edicao(self):
         view = NotaViewSet.as_view({'post': 'create'})

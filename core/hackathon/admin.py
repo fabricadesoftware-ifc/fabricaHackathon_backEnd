@@ -12,6 +12,7 @@ from .models import (
     Nota,
     ParticipanteEquipe,
     AvaliadorEdicao,
+    SolicitacaoPerfil,
 )
 
 @admin.register(User)
@@ -24,6 +25,30 @@ class UserAdmin(BaseUserAdmin):
     )
     list_display = ['username', 'email', 'first_name', 'last_name', 'tipoUser', 'is_staff']
     list_filter = ['tipoUser', 'is_staff', 'is_superuser', 'is_active']
+
+@admin.register(SolicitacaoPerfil)
+class SolicitacaoPerfilAdmin(admin.ModelAdmin):
+    list_display = ['usuario', 'perfil_solicitado', 'status', 'criada_em', 'decidida_em', 'decidida_por']
+    list_filter = ['status', 'perfil_solicitado']
+    search_fields = ['usuario__email', 'usuario__username']
+    readonly_fields = ['criada_em', 'decidida_em', 'decidida_por']
+    actions = ['aprovar_solicitacoes', 'recusar_solicitacoes']
+
+    def _decidir_em_massa(self, request, queryset, metodo, rotulo):
+        decididas = 0
+        for solicitacao in queryset.select_related('usuario').filter(status=SolicitacaoPerfil.Status.PENDENTE):
+            getattr(solicitacao, metodo)(request.user)
+            decididas += 1
+        self.message_user(request, f'{decididas} solicitação(ões) {rotulo}.')
+
+    @admin.action(description='Aprovar solicitações selecionadas (apenas pendentes)')
+    def aprovar_solicitacoes(self, request, queryset):
+        self._decidir_em_massa(request, queryset, 'aprovar', 'aprovada(s)')
+
+    @admin.action(description='Recusar solicitações selecionadas (apenas pendentes)')
+    def recusar_solicitacoes(self, request, queryset):
+        self._decidir_em_massa(request, queryset, 'recusar', 'recusada(s)')
+
 
 admin.site.register(Apoiador)
 admin.site.register(TipoEdicao)

@@ -1,4 +1,15 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
+
+
+def validate_avaliacao_aberta(edicao):
+    """Notas só podem ser lançadas/alteradas com a edição em AVALIACAO."""
+    if edicao.status == 'FINALIZADO':
+        raise PermissionDenied('A edição está finalizada: os dados ficam somente para leitura.')
+    if edicao.status != 'AVALIACAO':
+        raise serializers.ValidationError(
+            {"projeto": "A edição não está em fase de avaliação; não é possível lançar ou alterar notas."}
+        )
 
 
 def validate_nota_edicao(avaliador, projeto, criterio):

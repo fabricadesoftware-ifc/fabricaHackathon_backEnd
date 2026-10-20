@@ -3,10 +3,11 @@ from rest_framework.viewsets import ModelViewSet
 from ..models import Equipe
 from ..permissions import ReadOnlyOrAuthenticated
 from ..query_params import int_param
+from .mixins import BloqueiaEdicaoFinalizadaMixin
 from ..serializers import EquipeSerializer
 from ..serializers.public import EquipePublicSerializer
 
-class EquipeViewSet(ModelViewSet):
+class EquipeViewSet(BloqueiaEdicaoFinalizadaMixin, ModelViewSet):
     permission_classes = [ReadOnlyOrAuthenticated]
     queryset = Equipe.objects.all()
     serializer_class = EquipeSerializer

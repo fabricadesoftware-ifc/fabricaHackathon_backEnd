@@ -21,7 +21,7 @@ class PermissionsTestCase(TestCase):
 
         self.tipo_edicao = TipoEdicao.objects.create(nome='Presencial')
         self.edicao = Edicao.objects.create(
-            nome='Hack', ano=2026, status='INSCRICAO',
+            nome='Hack', ano=2026, status='AVALIACAO',
             data_inicio=date.today(), data_fim=date.today() + timedelta(days=3),
             minimo_participantes=2, maximo_participantes=5, maximo_equipes=10,
             tipo_edicao=self.tipo_edicao,
@@ -132,8 +132,9 @@ class NotaPermissionTests(PermissionsTestCase):
     def test_edicao_e_exclusao_somente_do_dono(self):
         nota = Nota.objects.create(nota='5.00', projeto=self.projeto, criterio=self.c1, avaliador=self.ae)
         url = f'/api/notas/{nota.id}/'
-        self.assertEqual(self.as_user(self.aval2).patch(url, {'nota': '9.00'}, format='json').status_code, 403)
-        self.assertEqual(self.as_user(self.aval2).delete(url).status_code, 403)
+        # Notas de outros avaliadores nem aparecem no queryset: 404 (não vaza a existência).
+        self.assertEqual(self.as_user(self.aval2).patch(url, {'nota': '9.00'}, format='json').status_code, 404)
+        self.assertEqual(self.as_user(self.aval2).delete(url).status_code, 404)
         self.assertEqual(self.as_user(self.admin).delete(url).status_code, 403)
         self.assertEqual(self.as_user(self.aval).patch(url, {'nota': '9.00'}, format='json').status_code, 200)
         self.assertEqual(self.as_user(self.aval).delete(url).status_code, 204)
