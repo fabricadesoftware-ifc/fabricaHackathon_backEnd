@@ -10,6 +10,7 @@ from .nota import Nota
 from .participanteEquipe import ParticipanteEquipe
 from .avaliadorEdicao import AvaliadorEdicao
 from .solicitacaoPerfil import SolicitacaoPerfil
+from .preAvaliacao import PreAvaliacao
 __all__ = [
     "Apoiador",
     "TipoEdicao",
@@ -23,4 +24,5 @@ __all__ = [
     "ParticipanteEquipe",
     "AvaliadorEdicao",
     "SolicitacaoPerfil",
+    "PreAvaliacao",
 ]

@@ -27,6 +27,8 @@ class EdicaoSerializer(LimpaImagensAntigasMixin, serializers.ModelSerializer):
             "minimo_participantes",
             "maximo_participantes",
             "maximo_equipes",
+            "pre_avaliacao_liberada",
+            "prazo_pre_avaliacao",
             "tipo_edicao",
             "apoiadores"
         ]

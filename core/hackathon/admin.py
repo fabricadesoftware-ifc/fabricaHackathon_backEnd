@@ -13,6 +13,7 @@ from .models import (
     ParticipanteEquipe,
     AvaliadorEdicao,
     SolicitacaoPerfil,
+    PreAvaliacao,
 )
 
 @admin.register(User)
@@ -60,3 +61,11 @@ admin.site.register(Equipe)
 admin.site.register(Nota)
 admin.site.register(ParticipanteEquipe)
 admin.site.register(AvaliadorEdicao)
+
+
+@admin.register(PreAvaliacao)
+class PreAvaliacaoAdmin(admin.ModelAdmin):
+    list_display = ['projeto', 'nota', 'atualizada_em']
+    list_filter = ['projeto__edicao']
+    search_fields = ['projeto__nome_projeto']
+    readonly_fields = ['nota', 'detalhe_pontuacao', 'criada_em', 'atualizada_em']

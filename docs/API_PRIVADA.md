@@ -152,3 +152,66 @@ Publicamente (e em `/api/me/...`) só aparece com a edição `FINALIZADO`.
 - `GET /api/participantes-equipe/`: ADMIN/PROFESSOR veem tudo; demais perfis só os integrantes das próprias equipes.
 - `POST /api/equipes/` (admin) valida `maximo_equipes` e coerência de tema/projeto com a edição.
 - `Equipe` ganhou o campo `criador` (nulo em equipes antigas).
+
+---
+
+## Pré-avaliação (vale 10% da nota final)
+
+Formulário preenchido pela equipe em "Meus projetos". **Nota final = 90% da média dos avaliadores + 10% da nota da pré-avaliação** (0 a 10). Equipe que não responde fica com 0 nos 10%.
+
+### Liberação e prazo (admin)
+Na edição (`PATCH /api/edicoes/{id}/`, admin): `pre_avaliacao_liberada` (bool) e `prazo_pre_avaliacao` (data/hora ISO, ex.: 1h antes da avaliação). O formulário só aceita respostas quando **a edição está EM_ANDAMENTO, foi liberado e o prazo não passou**. Fora disso: `403` com o motivo. Respostas fora do prazo não existem (nota 0).
+
+### `GET /api/me/projetos/{projeto_id}/pre-avaliacao/`
+Membros da equipe, administrador, professor e avaliadores da edição (somente leitura para estes). Outros: `403`.
+
+```json
+{
+  "projeto": 12, "edicao": 4, "aberta": true, "motivo_fechada": "", "liberada": true,
+  "prazo": "2026-10-21T14:00:00-03:00", "preenchida": false,
+  "integrantes": [{ "id": 3, "nome": "Ana" }, { "id": 5, "nome": "Beto" }],
+  "opcoes": {
+    "organizacao_metodo": [{ "valor": "KANBAN", "rotulo": "Kanban" }],
+    "hospedagem_plataforma": [{ "valor": "FABROKU", "rotulo": "Fabroku" }],
+    "banco_plataforma": [{ "valor": "FABROKU_POSTGRES", "rotulo": "PostgreSQL do Fabroku" }],
+    "minimo_caracteres_textos": 30
+  },
+  "responsabilidades": [], "organizacao_metodo": "", "organizacao_link": "",
+  "problema_entendido": "", "problema_explicacao": "", "maior_dificuldade": "", "proximos_passos": "",
+  "arquivo_rfs_rnfs": null, "arquitetura_arquivo": null, "arquitetura_link": "",
+  "hospedagem_plataforma": "", "hospedagem_link": "", "hospedagem_justificativa": "",
+  "banco_plataforma": "", "banco_justificativa": "",
+  "nota": "0.00", "detalhe_pontuacao": {}, "atualizada_em": null
+}
+```
+
+### `PATCH /api/me/projetos/{projeto_id}/pre-avaliacao/` (também `PUT`; sempre parcial)
+Somente **membros da equipe**. Aceita `application/json` ou `multipart/form-data` (necessário para enviar arquivos; nesse caso mande `responsabilidades` como string JSON). Pode salvar por partes: a pontuação é recalculada a cada gravação e devolvida na resposta (`nota`, `detalhe_pontuacao`).
+
+| Campo | Regra |
+|---|---|
+| `responsabilidades` | lista `[{ "user": id, "area": "back" }]`; só integrantes da equipe, sem repetir, `area` de 1 a 60 caracteres |
+| `organizacao_metodo` | `KANBAN`, `LISTA`, `CONVERSA`, `OUTRO` |
+| `organizacao_link`, `arquitetura_link`, `hospedagem_link` | URL `http`/`https` |
+| `problema_entendido`, `problema_explicacao`, `maior_dificuldade`, `proximos_passos`, `hospedagem_justificativa`, `banco_justificativa` | texto; só pontua com no mínimo 30 caracteres |
+| `arquivo_rfs_rnfs` (obrigatório para pontuar o item), `arquitetura_arquivo` | arquivo até 10 MB: pdf, doc, docx, md, txt, png, jpg, jpeg, webp |
+| `hospedagem_plataforma` | `FABROKU`, `OUTRA`, `LOCAL` |
+| `banco_plataforma` | `FABROKU_POSTGRES`, `SUPABASE`, `NEON`, `RENDER`, `OUTRO`, `LOCAL` |
+
+`nota` e `detalhe_pontuacao` são somente leitura. Erros: `400` por campo; `403` se não for membro ou se o formulário estiver fechado.
+
+### Pontuação automática (0–10)
+5 seções de 2 pontos; os itens de uma seção dividem os pontos igualmente.
+
+| Seção | Itens |
+|---|---|
+| 1. Equipe e organização | área de **todos** os integrantes (1,0); método de organização (1,0) |
+| 2. Entendimento do problema | 4 respostas de texto (0,5 cada, mínimo de 30 caracteres) |
+| 3. Arquivos de arquitetura | arquivo de RFs/RNFs (1,0); arquivo **ou** link de arquitetura (1,0) |
+| 4. Aplicação hospedada | onde + link (1,0); justificativa (1,0) |
+| 5. Banco de dados | onde (1,0); justificativa (1,0) |
+
+- Respondeu/entregou = 100% do item; em branco = 0%.
+- **Local = 50% do item "onde/link"**: plataforma `LOCAL` ou link com `localhost`, `127.0.0.1`, IP de rede interna (10.x, 172.16–31.x, 192.168.x) ou nome interno (`.local`, `.internal`, sem domínio). Vale para a aplicação e para o banco. As justificativas não perdem pontos.
+- Sem o arquivo de RFs/RNFs: 0 só naquele item; o resto não é afetado.
+- `detalhe_pontuacao` traz seções, itens, pontos e o motivo de cada um (ex.: "aplicação local (50%)").
