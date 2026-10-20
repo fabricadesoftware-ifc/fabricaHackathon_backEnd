@@ -543,7 +543,8 @@ class AvaliacaoTest(Base):
         self.assertIsNone(self.projeto.notaFinal_projeto)  # avaliador 2 sem o critério 2
         r = self.lancar(self.aval2, self.c2, '10.00')
         self.projeto.refresh_from_db()
-        self.assertEqual(self.projeto.notaFinal_projeto, Decimal('8.50'))  # (7 + 10) / 2
+        # 90% da média dos avaliadores ((7 + 10) / 2 = 8,5) + 10% da pré-avaliação (não preenchida = 0)
+        self.assertEqual(self.projeto.notaFinal_projeto, Decimal('7.65'))
         Nota.objects.get(pk=r.json()['id']).delete()
         self.projeto.refresh_from_db()
         self.assertIsNone(self.projeto.notaFinal_projeto)

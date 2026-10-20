@@ -198,6 +198,14 @@ STORAGES = {
             else "django.core.files.storage.FileSystemStorage"
         ),
     },
+    # Documentos da pré-avaliação (PDF, Word etc.): Cloudinary "raw" ou disco local.
+    "documentos": {
+        "BACKEND": (
+            "cloudinary_storage.storage.RawMediaCloudinaryStorage"
+            if os.environ.get("CLOUDINARY_URL")
+            else "django.core.files.storage.FileSystemStorage"
+        ),
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },

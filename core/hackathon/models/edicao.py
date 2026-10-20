@@ -31,6 +31,9 @@ class Edicao(models.Model):
     maximo_participantes = models.PositiveIntegerField(null=False, blank=False)
     maximo_equipes = models.PositiveIntegerField(null=False, blank=False)
     
+    pre_avaliacao_liberada = models.BooleanField(default=False)
+    prazo_pre_avaliacao = models.DateTimeField(null=True, blank=True)
+
     tipo_edicao = models.ForeignKey(TipoEdicao, on_delete=models.PROTECT, related_name="edicoes")
     apoiadores = models.ManyToManyField(Apoiador, related_name="edicoes", blank=True)
 

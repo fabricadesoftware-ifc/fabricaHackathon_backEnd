@@ -22,6 +22,7 @@ from core.hackathon.views import (
 )
 from core.hackathon.views.registro import RegistroView, SolicitacaoPerfilViewSet
 from core.hackathon.views.inscricao import InscricaoViewSet
+from core.hackathon.views.preAvaliacao import PreAvaliacaoView
 from core.hackathon.views.me import (
     MeView,
     MinhasAvaliacoesView,
@@ -57,6 +58,7 @@ urlpatterns = [
     path("api/me/", MeView.as_view(), name="me"),
     path("api/me/equipes/", MinhasEquipesView.as_view(), name="me-equipes"),
     path("api/me/projetos/", MeusProjetosView.as_view(), name="me-projetos"),
+    path("api/me/projetos/<int:projeto_id>/pre-avaliacao/", PreAvaliacaoView.as_view(), name="me-pre-avaliacao"),
     path("api/me/avaliacoes/", MinhasAvaliacoesView.as_view(), name="me-avaliacoes"),
     path("api/", include(router.urls)),
     path("api/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
