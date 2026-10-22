@@ -1,5 +1,8 @@
 import logging
 
+from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework.exceptions import APIException, ValidationError
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,7 +15,28 @@ class LimpaImagensAntigasMixin:
 
     campos_imagem = ()
 
+    def _gravar(self, operacao, validated_data, *args):
+        """Falha do storage (ex.: Cloudinary fora do ar/credencial errada) vira erro 400 legível, não 500."""
+        enviando = [c for c in self.campos_imagem if validated_data.get(c)]
+        try:
+            return operacao(*args, validated_data)
+        except (APIException, DjangoValidationError):
+            raise
+        except Exception:
+            if not enviando:
+                raise
+            logger.exception("Falha ao gravar imagem (%s) no storage.", ", ".join(enviando))
+            raise ValidationError({
+                enviando[0]: "Não foi possível salvar a imagem agora. Tente novamente em instantes ou use outra imagem."
+            })
+
+    def create(self, validated_data):
+        return self._gravar(super().create, validated_data)
+
     def update(self, instance, validated_data):
+        return self._gravar(self._atualizar, validated_data, instance)
+
+    def _atualizar(self, instance, validated_data):
         antigos = {
             campo: getattr(instance, campo)
             for campo in self.campos_imagem
