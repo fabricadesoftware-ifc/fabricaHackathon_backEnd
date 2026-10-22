@@ -154,6 +154,15 @@ def pontuar(pre, membros_ids):
     return total, {"secoes": secoes, "total": str(total)}
 
 
+def _publicar_link_hospedagem(pre):
+    """O link de hospedagem informado na pré-avaliação vira o link público do projeto (se não for local)."""
+    link = (pre.hospedagem_link or "").strip()
+    projeto = pre.projeto
+    if link and not link_local(link) and projeto.link_deploy_projeto != link:
+        projeto.link_deploy_projeto = link
+        projeto.save(update_fields=["link_deploy_projeto"])
+
+
 def salvar_com_pontuacao(pre):
     """Recalcula a nota da pré-avaliação, grava e atualiza a nota final do projeto."""
     from .nota_final import recalcular_nota_final
@@ -161,5 +170,6 @@ def salvar_com_pontuacao(pre):
     membros = list(pre.projeto.equipes.participantes.values_list("user_id", flat=True))
     pre.nota, pre.detalhe_pontuacao = pontuar(pre, membros)
     pre.save()
+    _publicar_link_hospedagem(pre)
     recalcular_nota_final(pre.projeto)
     return pre

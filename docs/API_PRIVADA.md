@@ -50,13 +50,14 @@ O mesmo painel existe no Django admin (`/admin/`, "Solicitações de perfil": li
 
 ## Inscrição de equipe — `PARTICIPANTE`
 
-Só funciona com a edição em `INSCRICAO`. As alterações são do **criador** da equipe (outros integrantes recebem `403`; quem não é da equipe recebe `404`).
+Criar a equipe, trocar o nome e mexer nos membros só funcionam com a edição em `INSCRICAO`. Tema, descrição, link e logo do projeto (e o nome do projeto) também podem ser alterados com a edição `EM_ANDAMENTO`. As alterações são do **criador** da equipe (outros integrantes recebem `403`; quem não é da equipe recebe `404`).
 
 ### `POST /api/inscricoes/`
 Cria `Equipe` + `Projeto` + integrantes em uma única transação (qualquer erro desfaz tudo; edição travada com `select_for_update` para respeitar `maximo_equipes` em concorrência).
 ```json
-{ "edicao": 1, "nome_equipe": "Alfa", "tema": 3,
-  "projeto": { "nome_projeto": "App", "descricao_projeto": "...", "link_deploy_projeto": "https://... (opcional)" },
+{ "edicao": 1, "nome_equipe": "Alfa",
+  "projeto": { "nome_projeto": "App" },   // só o nome é obrigatório
+  // opcionais, podem ser preenchidos depois: "tema": 3, "projeto.descricao_projeto", "projeto.link_deploy_projeto"
   "membros": ["colega1@ex.com", "colega2@ex.com"] }
 ```
 `membros` = e-mails dos **demais** integrantes (o criador entra automaticamente e conta no mín./máx.).
@@ -64,7 +65,9 @@ Resposta `201`: equipe no formato de `GET /api/me/equipes/` (abaixo).
 
 Erros `400` (por campo):
 - `edicao`: inscrições fechadas; limite de equipes atingido; você já está em outra equipe da edição.
-- `tema`: não pertence à edição.
+- `tema` (opcional): não pertence à edição.
+
+O `link_deploy_projeto` também é preenchido automaticamente com o link de hospedagem informado na pré-avaliação (quando não é um endereço local).
 - `nome_equipe`: já existe na edição.
 - `membros` (lista de mensagens, uma por e-mail problemático): e-mail não cadastrado; usuário sem perfil de Participante; já está em outra equipe da edição; e-mail repetido; seu próprio e-mail; mínimo/máximo de participantes da edição.
 - `projeto`, `nome_equipe`, ... : campos obrigatórios/ inválidos.
@@ -79,7 +82,7 @@ Parcial: `nome_equipe`, `tema`, `projeto: {nome_projeto, descricao_projeto, link
 Remove um integrante (não o criador; não pode ficar abaixo do mínimo). Devolve a equipe.
 
 ### `POST /api/inscricoes/{equipe_id}/logo/` e `DELETE /api/inscricoes/{equipe_id}/logo/` — criador
-`POST` com `multipart/form-data` e o campo `logo_projeto` (JPEG, PNG ou WebP, até 5 MB) envia ou troca a logo do projeto; `DELETE` remove. Só o criador e só com a edição em `INSCRICAO` (`400` fora disso). Devolve a equipe no formato de `GET /api/me/equipes/`. Arquivo ausente ou inválido → `400 {"logo_projeto": ...}`.
+`POST` com `multipart/form-data` e o campo `logo_projeto` (JPEG, PNG ou WebP, até 5 MB) envia ou troca a logo do projeto; `DELETE` remove. Só o criador, com a edição em `INSCRICAO` ou `EM_ANDAMENTO` (`400` fora disso). Devolve a equipe no formato de `GET /api/me/equipes/`. Arquivo ausente ou inválido → `400 {"logo_projeto": ...}`.
 
 ### `POST /api/inscricoes/{equipe_id}/sair/` — integrante não criador
 `204`. Não pode deixar a equipe abaixo do mínimo (`400`); o criador deve excluir a equipe (`403`).

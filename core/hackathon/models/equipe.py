@@ -8,7 +8,8 @@ from .user import User
 class Equipe(models.Model):
     nome_equipe = models.CharField(null=False, blank=False, max_length=50)
     edicao = models.ForeignKey(Edicao, on_delete=models.PROTECT, related_name='equipes',blank=False, null=False)
-    tema = models.ForeignKey(Tema, on_delete=models.PROTECT, related_name="equipes", blank=False, null=False)
+    # Opcional: a equipe escolhe o tema depois da inscrição.
+    tema = models.ForeignKey(Tema, on_delete=models.PROTECT, related_name="equipes", blank=True, null=True)
     projeto = models.OneToOneField(Projeto, on_delete=models.PROTECT, related_name="equipes", blank=False, null=False)
     criador = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="equipes_criadas", blank=True, null=True)
     

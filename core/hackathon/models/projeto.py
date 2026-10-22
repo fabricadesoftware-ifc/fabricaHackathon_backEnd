@@ -6,7 +6,7 @@ from ..validations.imagem_validation import validate_imagem
 
 class Projeto(models.Model):
     nome_projeto = models.CharField(max_length=100, blank=False, null=False)
-    descricao_projeto = models.TextField(blank=False, null=False)
+    descricao_projeto = models.TextField(blank=True, default="")
     link_deploy_projeto = models.URLField(blank=True, null=True)
     notaFinal_projeto = models.DecimalField(
         max_digits=4,

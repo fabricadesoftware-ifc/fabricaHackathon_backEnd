@@ -344,7 +344,8 @@ class InscricaoTest(Base):
     def test_campos_obrigatorios_por_campo(self):
         r = self.as_user(self.u1).post('/api/inscricoes/', {}, format='json')
         self.assertEqual(r.status_code, 400)
-        self.assertTrue({'edicao', 'nome_equipe', 'tema', 'projeto'} <= set(r.json()))
+        self.assertTrue({'edicao', 'nome_equipe', 'projeto'} <= set(r.json()))
+        self.assertNotIn('tema', r.json())  # tema é opcional
 
     def test_rollback_se_falhar_no_meio(self):
         with mock.patch(
@@ -615,8 +616,11 @@ class LogoProjetoInscricaoTest(Base):
         self.assertEqual(self.as_user(self.u2).post(self.url, {'logo_projeto': self.imagem()}, format='multipart').status_code, 403)
         self.assertEqual(self.as_user(self.u3).post(self.url, {'logo_projeto': self.imagem()}, format='multipart').status_code, 404)
 
-    def test_bloqueado_fora_da_fase_de_inscricao(self):
+    def test_permitido_em_andamento_e_bloqueado_depois(self):
         Edicao.objects.filter(pk=self.edicao.pk).update(status='EM_ANDAMENTO')
+        r = self.as_user(self.u1).post(self.url, {'logo_projeto': self.imagem()}, format='multipart')
+        self.assertEqual(r.status_code, 200, r.content)
+        Edicao.objects.filter(pk=self.edicao.pk).update(status='AVALIACAO')
         r = self.as_user(self.u1).post(self.url, {'logo_projeto': self.imagem()}, format='multipart')
         self.assertEqual(r.status_code, 400)
 
@@ -653,3 +657,57 @@ class EditarPerfilTest(Base):
         ruim = SimpleUploadedFile('x.png', b'nao e imagem', content_type='image/png')
         self.assertEqual(self.as_user(self.u1).patch('/api/me/', {'foto_perfil': ruim}, format='multipart').status_code, 400)
         self.assertIn(APIClient().patch('/api/me/', {'first_name': 'a'}, format='json').status_code, (401, 403))
+
+
+
+class EquipeSemTemaNemDescricaoTest(Base):
+    """Cadastro enxuto: só nome da equipe e do projeto; o resto é completado depois."""
+
+    def corpo_enxuto(self, **kw):
+        c = {
+            'edicao': self.edicao.id, 'nome_equipe': 'Enxuta',
+            'projeto': {'nome_projeto': 'Meu Projeto'}, 'membros': ['u2@t.com'],
+        }
+        c.update(kw)
+        return c
+
+    def test_inscricao_sem_tema_nem_descricao(self):
+        r = self.as_user(self.u1).post('/api/inscricoes/', self.corpo_enxuto(), format='json')
+        self.assertEqual(r.status_code, 201, r.content)
+        self.assertIsNone(r.data['tema'])
+        self.assertIsNone(r.data['tema_id'])
+        self.assertEqual(r.data['projeto']['nome_projeto'], 'Meu Projeto')
+        self.assertEqual(r.data['projeto']['descricao_projeto'], '')
+
+    def test_nome_do_projeto_continua_obrigatorio(self):
+        r = self.as_user(self.u1).post('/api/inscricoes/', self.corpo_enxuto(projeto={}), format='json')
+        self.assertEqual(r.status_code, 400)
+        self.assertIn('projeto', r.json())
+
+    def test_api_publica_aceita_equipe_sem_tema(self):
+        self.as_user(self.u1).post('/api/inscricoes/', self.corpo_enxuto(), format='json')
+        self.client.force_authenticate(user=None)
+        r = self.client.get('/api/equipes/')
+        self.assertEqual(r.status_code, 200, r.content)
+
+    def test_completa_tema_e_descricao_depois_inclusive_em_andamento(self):
+        r = self.as_user(self.u1).post('/api/inscricoes/', self.corpo_enxuto(), format='json')
+        equipe_id = r.data['id']
+        self.edicao.status = 'EM_ANDAMENTO'
+        self.edicao.save()
+        url = f'/api/inscricoes/{equipe_id}/'
+        c = self.as_user(self.u1)
+        r = c.patch(url, {'tema': self.tema.id, 'projeto': {'descricao_projeto': 'Agora sim'}}, format='json')
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertEqual(r.data['tema_id'], self.tema.id)
+        self.assertEqual(r.data['projeto']['descricao_projeto'], 'Agora sim')
+        # nome da equipe e membros continuam travados fora das inscrições
+        self.assertEqual(c.patch(url, {'nome_equipe': 'Outro'}, format='json').status_code, 400)
+        self.assertEqual(c.post(url + 'membros/', {'membros': ['u3@t.com']}, format='json').status_code, 400)
+
+    def test_projeto_trava_apos_avaliacao(self):
+        r = self.as_user(self.u1).post('/api/inscricoes/', self.corpo_enxuto(), format='json')
+        self.edicao.status = 'AVALIACAO'
+        self.edicao.save()
+        r2 = self.as_user(self.u1).patch(f"/api/inscricoes/{r.data['id']}/", {'projeto': {'nome_projeto': 'X'}}, format='json')
+        self.assertEqual(r2.status_code, 400)
