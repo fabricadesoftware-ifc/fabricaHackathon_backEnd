@@ -72,6 +72,18 @@ class PreAvaliacaoTest(Base):
             return c.patch(self.url, dados, format="multipart")
         return c.patch(self.url, corpo, format="json")
 
+    def test_link_de_hospedagem_vira_link_publico_do_projeto(self):
+        r = self.enviar()
+        self.assertEqual(r.status_code, 200, r.content)
+        self.projeto.refresh_from_db()
+        self.assertEqual(self.projeto.link_deploy_projeto, "https://app.example.com")
+
+    def test_link_local_nao_e_publicado(self):
+        r = self.enviar(corpo=self.completo(hospedagem_link="http://localhost:3000"))
+        self.assertEqual(r.status_code, 200, r.content)
+        self.projeto.refresh_from_db()
+        self.assertFalse(self.projeto.link_deploy_projeto)
+
     # --- pontuação -----------------------------------------------------
     def test_formulario_completo_vale_10(self):
         r = self.enviar()

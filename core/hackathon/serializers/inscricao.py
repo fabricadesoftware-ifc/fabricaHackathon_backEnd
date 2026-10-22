@@ -7,14 +7,14 @@ from .public import nota_final_publica
 
 class ProjetoInscricaoSerializer(serializers.Serializer):
     nome_projeto = serializers.CharField(max_length=100)
-    descricao_projeto = serializers.CharField()
+    descricao_projeto = serializers.CharField(required=False, allow_blank=True)
     link_deploy_projeto = serializers.URLField(required=False, allow_null=True, allow_blank=True)
 
 
 class InscricaoSerializer(serializers.Serializer):
     edicao = serializers.PrimaryKeyRelatedField(queryset=Edicao.objects.all())
     nome_equipe = serializers.CharField(max_length=50)
-    tema = serializers.PrimaryKeyRelatedField(queryset=Tema.objects.all())
+    tema = serializers.PrimaryKeyRelatedField(queryset=Tema.objects.all(), required=False, allow_null=True)
     projeto = ProjetoInscricaoSerializer()
     membros = serializers.ListField(
         child=serializers.EmailField(), required=False, default=list,
@@ -60,7 +60,7 @@ class MeuProjetoSerializer(serializers.ModelSerializer):
 
 
 class MinhaEquipeSerializer(serializers.ModelSerializer):
-    tema = serializers.CharField(source='tema.descricao_tema', read_only=True)
+    tema = serializers.CharField(source='tema.descricao_tema', read_only=True, allow_null=True)
     tema_id = serializers.IntegerField(read_only=True)
     projeto = MeuProjetoSerializer(read_only=True)
     membros = serializers.SerializerMethodField()

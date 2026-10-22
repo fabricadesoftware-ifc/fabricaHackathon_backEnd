@@ -50,13 +50,14 @@ O mesmo painel existe no Django admin (`/admin/`, "Solicitações de perfil": li
 
 ## Inscrição de equipe — `PARTICIPANTE`
 
-Só funciona com a edição em `INSCRICAO`. As alterações são do **criador** da equipe (outros integrantes recebem `403`; quem não é da equipe recebe `404`).
+Criar a equipe, trocar o nome e mexer nos membros só funcionam com a edição em `INSCRICAO`. Tema, descrição, link e logo do projeto (e o nome do projeto) também podem ser alterados com a edição `EM_ANDAMENTO`. As alterações são do **criador** da equipe (outros integrantes recebem `403`; quem não é da equipe recebe `404`).
 
 ### `POST /api/inscricoes/`
 Cria `Equipe` + `Projeto` + integrantes em uma única transação (qualquer erro desfaz tudo; edição travada com `select_for_update` para respeitar `maximo_equipes` em concorrência).
 ```json
-{ "edicao": 1, "nome_equipe": "Alfa", "tema": 3,
-  "projeto": { "nome_projeto": "App", "descricao_projeto": "...", "link_deploy_projeto": "https://... (opcional)" },
+{ "edicao": 1, "nome_equipe": "Alfa",
+  "projeto": { "nome_projeto": "App" },   // só o nome é obrigatório
+  // opcionais, podem ser preenchidos depois: "tema": 3, "projeto.descricao_projeto", "projeto.link_deploy_projeto"
   "membros": ["colega1@ex.com", "colega2@ex.com"] }
 ```
 `membros` = e-mails dos **demais** integrantes (o criador entra automaticamente e conta no mín./máx.).
@@ -64,7 +65,9 @@ Resposta `201`: equipe no formato de `GET /api/me/equipes/` (abaixo).
 
 Erros `400` (por campo):
 - `edicao`: inscrições fechadas; limite de equipes atingido; você já está em outra equipe da edição.
-- `tema`: não pertence à edição.
+- `tema` (opcional): não pertence à edição.
+
+O `link_deploy_projeto` também é preenchido automaticamente com o link de hospedagem informado na pré-avaliação (quando não é um endereço local).
 - `nome_equipe`: já existe na edição.
 - `membros` (lista de mensagens, uma por e-mail problemático): e-mail não cadastrado; usuário sem perfil de Participante; já está em outra equipe da edição; e-mail repetido; seu próprio e-mail; mínimo/máximo de participantes da edição.
 - `projeto`, `nome_equipe`, ... : campos obrigatórios/ inválidos.
@@ -79,7 +82,7 @@ Parcial: `nome_equipe`, `tema`, `projeto: {nome_projeto, descricao_projeto, link
 Remove um integrante (não o criador; não pode ficar abaixo do mínimo). Devolve a equipe.
 
 ### `POST /api/inscricoes/{equipe_id}/logo/` e `DELETE /api/inscricoes/{equipe_id}/logo/` — criador
-`POST` com `multipart/form-data` e o campo `logo_projeto` (JPEG, PNG ou WebP, até 5 MB) envia ou troca a logo do projeto; `DELETE` remove. Só o criador e só com a edição em `INSCRICAO` (`400` fora disso). Devolve a equipe no formato de `GET /api/me/equipes/`. Arquivo ausente ou inválido → `400 {"logo_projeto": ...}`.
+`POST` com `multipart/form-data` e o campo `logo_projeto` (JPEG, PNG ou WebP, até 5 MB) envia ou troca a logo do projeto; `DELETE` remove. Só o criador, com a edição em `INSCRICAO` ou `EM_ANDAMENTO` (`400` fora disso). Devolve a equipe no formato de `GET /api/me/equipes/`. Arquivo ausente ou inválido → `400 {"logo_projeto": ...}`.
 
 ### `POST /api/inscricoes/{equipe_id}/sair/` — integrante não criador
 `204`. Não pode deixar a equipe abaixo do mínimo (`400`); o criador deve excluir a equipe (`403`).
@@ -221,3 +224,17 @@ Somente **membros da equipe**. Aceita `application/json` ou `multipart/form-data
 - **Local = 50% do item "onde/link"**: plataforma `LOCAL` ou link com `localhost`, `127.0.0.1`, IP de rede interna (10.x, 172.16–31.x, 192.168.x) ou nome interno (`.local`, `.internal`, sem domínio). Vale para a aplicação e para o banco. As justificativas não perdem pontos.
 - Sem o arquivo de RFs/RNFs: 0 só naquele item; o resto não é afetado.
 - `detalhe_pontuacao` traz seções, itens, pontos e o motivo de cada um (ex.: "aplicação local (50%)").
+
+## Painel do administrador (`/api/painel/`, somente ADMIN)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/painel/edicoes/` | Todas as edições com contadores |
+| GET | `/api/painel/edicoes/{id}/` | Resumo: dados, contagens, critérios, temas, avaliadores e progresso |
+| GET | `/api/painel/edicoes/{id}/equipes/` | Equipes com membros, projeto, pré-avaliação e nota final |
+| GET | `/api/painel/edicoes/{id}/resultados/` | Médias por critério/avaliador, pré-avaliação, nota final e posição (visível ao admin antes de FINALIZADO) |
+| GET | `/api/painel/edicoes/{id}/avaliadores/` | Todos os usuários AVALIADOR com flag `vinculado` |
+| POST | `/api/painel/edicoes/{id}/avaliadores/` | `{"user": id}` vincula avaliador |
+| DELETE | `/api/painel/edicoes/{id}/avaliadores/{user_id}/` | Desvincula (400 se já lançou notas) |
+
+Status, pré-avaliação (`pre_avaliacao_liberada`, `prazo_pre_avaliacao`) e demais dados seguem em `PATCH /api/edicoes/{id}/`.
