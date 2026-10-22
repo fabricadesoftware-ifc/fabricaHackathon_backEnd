@@ -224,3 +224,17 @@ Somente **membros da equipe**. Aceita `application/json` ou `multipart/form-data
 - **Local = 50% do item "onde/link"**: plataforma `LOCAL` ou link com `localhost`, `127.0.0.1`, IP de rede interna (10.x, 172.16–31.x, 192.168.x) ou nome interno (`.local`, `.internal`, sem domínio). Vale para a aplicação e para o banco. As justificativas não perdem pontos.
 - Sem o arquivo de RFs/RNFs: 0 só naquele item; o resto não é afetado.
 - `detalhe_pontuacao` traz seções, itens, pontos e o motivo de cada um (ex.: "aplicação local (50%)").
+
+## Painel do administrador (`/api/painel/`, somente ADMIN)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/painel/edicoes/` | Todas as edições com contadores |
+| GET | `/api/painel/edicoes/{id}/` | Resumo: dados, contagens, critérios, temas, avaliadores e progresso |
+| GET | `/api/painel/edicoes/{id}/equipes/` | Equipes com membros, projeto, pré-avaliação e nota final |
+| GET | `/api/painel/edicoes/{id}/resultados/` | Médias por critério/avaliador, pré-avaliação, nota final e posição (visível ao admin antes de FINALIZADO) |
+| GET | `/api/painel/edicoes/{id}/avaliadores/` | Todos os usuários AVALIADOR com flag `vinculado` |
+| POST | `/api/painel/edicoes/{id}/avaliadores/` | `{"user": id}` vincula avaliador |
+| DELETE | `/api/painel/edicoes/{id}/avaliadores/{user_id}/` | Desvincula (400 se já lançou notas) |
+
+Status, pré-avaliação (`pre_avaliacao_liberada`, `prazo_pre_avaliacao`) e demais dados seguem em `PATCH /api/edicoes/{id}/`.
