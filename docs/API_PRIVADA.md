@@ -94,6 +94,9 @@ Exclui equipe, projeto e vínculos. `204`.
 ### `GET /api/me/` — qualquer autenticado
 `{ id, username, first_name, last_name, email, tipoUser, foto_perfil, solicitacao_perfil: {id, perfil_solicitado, status} | null }`
 
+### `PATCH /api/me/` — qualquer autenticado
+Edita o **próprio** perfil: `first_name`, `last_name` e `foto_perfil` (JSON; ou `multipart/form-data` para enviar a foto; `null` remove). `username`, `email` e `tipoUser` são ignorados (o e-mail é o login). Foto JPEG/PNG/WebP até 5 MB (`400` se inválida). Devolve o mesmo formato de `GET /api/me/`.
+
 ### `GET /api/me/equipes/` — PARTICIPANTE (só as suas) · PROFESSOR/ADMIN (todas, somente leitura) · AVALIADOR `403`
 Lista sem paginação:
 ```json

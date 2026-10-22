@@ -99,6 +99,17 @@ class MeSerializer(serializers.ModelSerializer):
         return {'id': ultima.id, 'perfil_solicitado': ultima.perfil_solicitado, 'status': ultima.status}
 
 
+class PerfilSerializer(LimpaImagensAntigasMixin, serializers.ModelSerializer):
+    """Edição do próprio perfil: só nome, sobrenome e foto (usuário, e-mail e tipo não mudam aqui)."""
+
+    campos_imagem = ('foto_perfil',)
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'foto_perfil']
+        extra_kwargs = {'foto_perfil': {'allow_null': True}}
+
+
 class LogoProjetoSerializer(LimpaImagensAntigasMixin, serializers.ModelSerializer):
     """Troca/remoção da logo do projeto pelo criador da equipe (valida tamanho e formato)."""
 

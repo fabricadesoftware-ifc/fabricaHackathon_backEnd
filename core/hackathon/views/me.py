@@ -1,15 +1,25 @@
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..models import AvaliadorEdicao, Criterio, Equipe, Nota, Projeto
 from ..permissions import is_admin, is_avaliador, is_participante, is_professor
-from ..serializers.inscricao import MeSerializer, MeuProjetoSerializer, MinhaEquipeSerializer
+from ..serializers.inscricao import MeSerializer, MeuProjetoSerializer, MinhaEquipeSerializer, PerfilSerializer
 
 
 class MeView(APIView):
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+
     def get(self, request):
+        return Response(MeSerializer(request.user, context={'request': request}).data)
+
+    def patch(self, request):
+        """Atualiza só nome, sobrenome e foto do próprio usuário (JSON ou multipart)."""
+        serializer = PerfilSerializer(request.user, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(MeSerializer(request.user, context={'request': request}).data)
 
 
