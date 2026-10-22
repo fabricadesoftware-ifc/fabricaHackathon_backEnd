@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from ..models import Edicao, Equipe, Projeto, Tema, User
+from .imagem import LimpaImagensAntigasMixin
 from .public import nota_final_publica
 
 
@@ -96,3 +97,14 @@ class MeSerializer(serializers.ModelSerializer):
         if ultima is None:
             return None
         return {'id': ultima.id, 'perfil_solicitado': ultima.perfil_solicitado, 'status': ultima.status}
+
+
+class LogoProjetoSerializer(LimpaImagensAntigasMixin, serializers.ModelSerializer):
+    """Troca/remoção da logo do projeto pelo criador da equipe (valida tamanho e formato)."""
+
+    campos_imagem = ('logo_projeto',)
+
+    class Meta:
+        model = Projeto
+        fields = ['logo_projeto']
+        extra_kwargs = {'logo_projeto': {'allow_null': True}}
