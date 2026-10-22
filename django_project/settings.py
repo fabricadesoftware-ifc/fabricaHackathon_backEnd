@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import warnings
+
+from django.core.exceptions import ImproperlyConfigured
 import sys
 from pathlib import Path
 from datetime import timedelta
@@ -36,7 +39,14 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env_bool("DEBUG", True)
+# Sem DEBUG definido: desenvolvimento local liga o debug, mas qualquer ambiente com
+# DATABASE_URL (produção/Fabroku) nasce com DEBUG desligado, evitando vazar telas de erro.
+DEBUG = env_bool("DEBUG", "DATABASE_URL" not in os.environ)
+
+if not DEBUG and SECRET_KEY.startswith("django-insecure-"):
+    raise ImproperlyConfigured(
+        "Defina SECRET_KEY no ambiente: o valor padrão é inseguro e não pode ser usado com DEBUG=False."
+    )
 
 # Lista separada por vírgulas, ex.: "api.exemplo.com,localhost"
 ALLOWED_HOSTS = [
@@ -44,6 +54,19 @@ ALLOWED_HOSTS = [
     for host in os.environ.get("ALLOWED_HOSTS", "").split(",")
     if host.strip()
 ]
+
+# Avisos de configuração em produção (aparecem no log de inicialização).
+if not DEBUG and "test" not in sys.argv:
+    if not ALLOWED_HOSTS:
+        warnings.warn("ALLOWED_HOSTS está vazio: com DEBUG=False toda requisição será recusada (400).")
+    _cloud = os.environ.get("CLOUDINARY_URL", "")
+    if "<" in _cloud or ">" in _cloud:
+        warnings.warn("CLOUDINARY_URL ainda tem os marcadores <...> do exemplo: troque pelos valores reais.")
+    if not _cloud:
+        warnings.warn(
+            "CLOUDINARY_URL não definida: imagens e documentos seriam gravados no disco do container, "
+            "não são servidos com DEBUG=False e se perdem a cada deploy."
+        )
 
 # Hasher rápido apenas durante os testes (reduz muito o tempo da suíte)
 if "test" in sys.argv:
