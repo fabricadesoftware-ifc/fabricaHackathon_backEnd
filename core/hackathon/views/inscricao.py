@@ -87,9 +87,9 @@ class InscricaoViewSet(GenericViewSet):
     @action(detail=True, methods=['post', 'delete'], url_path='logo',
             parser_classes=[MultiPartParser, FormParser, JSONParser])
     def logo(self, request, pk=None):
-        """POST (multipart `logo_projeto`) envia/troca a logo; DELETE remove. Só o criador, em INSCRICAO."""
+        """POST (multipart `logo_projeto`) envia/troca a logo; DELETE remove. Só o criador, em INSCRICAO ou EM_ANDAMENTO."""
         equipe = self._equipe_do_criador()
-        servico.exigir_inscricao_aberta(equipe)
+        servico.exigir_projeto_editavel(equipe)
         dados = {'logo_projeto': None} if request.method == 'DELETE' else request.data
         serializer = LogoProjetoSerializer(equipe.projeto, data=dados, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)

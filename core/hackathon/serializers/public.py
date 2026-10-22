@@ -46,7 +46,7 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
 
 
 class EquipePublicSerializer(serializers.ModelSerializer):
-    tema = serializers.CharField(source="tema.descricao_tema", read_only=True)
+    tema = serializers.CharField(source="tema.descricao_tema", read_only=True, allow_null=True)
     projeto = ProjetoResumoSerializer(read_only=True)
 
     class Meta:

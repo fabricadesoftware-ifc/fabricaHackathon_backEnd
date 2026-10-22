@@ -16,6 +16,18 @@ def _exigir_inscricao_aberta(edicao):
         raise ValidationError({'edicao': 'As inscrições desta edição não estão abertas.'})
 
 
+def _exigir_projeto_editavel(edicao):
+    """Dados do projeto (descrição, tema, link, logo) seguem editáveis também com a edição em andamento."""
+    if edicao.status not in ('INSCRICAO', 'EM_ANDAMENTO'):
+        raise ValidationError({'edicao': 'O projeto só pode ser alterado com a edição em inscrições ou em andamento.'})
+
+
+def exigir_projeto_editavel(equipe):
+    """Garante (com a edição travada) que o projeto da equipe ainda pode ser alterado."""
+    with transaction.atomic():
+        _exigir_projeto_editavel(_travar_edicao(equipe.edicao_id))
+
+
 def exigir_inscricao_aberta(equipe):
     """Garante (com a edição travada) que a edição da equipe ainda está em INSCRICAO."""
     with transaction.atomic():
@@ -78,8 +90,8 @@ def criar_inscricao(criador, dados):
         if edicao.equipes.count() >= edicao.maximo_equipes:
             raise ValidationError({'edicao': f"A edição já atingiu o limite de {edicao.maximo_equipes} equipes."})
 
-        tema = dados['tema']
-        if tema.edicao_id != edicao.pk:
+        tema = dados.get('tema')
+        if tema is not None and tema.edicao_id != edicao.pk:
             raise ValidationError({'tema': 'O tema não pertence à edição informada.'})
 
         if ParticipanteEquipe.objects.filter(user=criador, equipe__edicao=edicao).exists():
@@ -106,15 +118,17 @@ def criar_inscricao(criador, dados):
 def atualizar_equipe(equipe, dados):
     with transaction.atomic():
         edicao = _travar_edicao(equipe.edicao_id)
-        _exigir_inscricao_aberta(edicao)
+        _exigir_projeto_editavel(edicao)
         if 'nome_equipe' in dados:
+            # O nome da equipe só muda enquanto as inscrições estão abertas.
+            _exigir_inscricao_aberta(edicao)
             if Equipe.objects.filter(edicao=edicao, nome_equipe__iexact=dados['nome_equipe']).exclude(
                 pk=equipe.pk
             ).exists():
                 raise ValidationError({'nome_equipe': 'Já existe uma equipe com este nome nesta edição.'})
             equipe.nome_equipe = dados['nome_equipe']
         if 'tema' in dados:
-            if dados['tema'].edicao_id != edicao.pk:
+            if dados['tema'] is not None and dados['tema'].edicao_id != edicao.pk:
                 raise ValidationError({'tema': 'O tema não pertence à edição informada.'})
             equipe.tema = dados['tema']
         equipe.save()
