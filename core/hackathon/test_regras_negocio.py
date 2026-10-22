@@ -619,3 +619,37 @@ class LogoProjetoInscricaoTest(Base):
         Edicao.objects.filter(pk=self.edicao.pk).update(status='EM_ANDAMENTO')
         r = self.as_user(self.u1).post(self.url, {'logo_projeto': self.imagem()}, format='multipart')
         self.assertEqual(r.status_code, 400)
+
+
+@override_settings(STORAGES={
+    'default': {'BACKEND': 'django.core.files.storage.InMemoryStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+})
+class EditarPerfilTest(Base):
+    def test_edita_nome_sobrenome_e_foto(self):
+        from .test_imagens import imagem
+        c = self.as_user(self.u1)
+        r = c.patch('/api/me/', {'first_name': 'Ana', 'last_name': 'Silva'}, format='json')
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertEqual((r.data['first_name'], r.data['last_name']), ('Ana', 'Silva'))
+        r = c.patch('/api/me/', {'foto_perfil': imagem()}, format='multipart')
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertTrue(r.data['foto_perfil'].startswith('http'))
+        r = c.patch('/api/me/', {'foto_perfil': None}, format='json')
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertIsNone(r.data['foto_perfil'])
+        self.assertEqual(c.get('/api/me/').data['first_name'], 'Ana')
+
+    def test_nao_altera_usuario_email_nem_tipo(self):
+        c = self.as_user(self.u1)
+        antes = (self.u1.username, self.u1.email, self.u1.tipoUser)
+        r = c.patch('/api/me/', {'username': 'x', 'email': 'x@x.com', 'tipoUser': 'ADMIN', 'first_name': 'Z'}, format='json')
+        self.assertEqual(r.status_code, 200, r.content)
+        self.u1.refresh_from_db()
+        self.assertEqual((self.u1.username, self.u1.email, self.u1.tipoUser), antes)
+        self.assertEqual(self.u1.first_name, 'Z')
+
+    def test_foto_invalida_e_exige_login(self):
+        ruim = SimpleUploadedFile('x.png', b'nao e imagem', content_type='image/png')
+        self.assertEqual(self.as_user(self.u1).patch('/api/me/', {'foto_perfil': ruim}, format='multipart').status_code, 400)
+        self.assertIn(APIClient().patch('/api/me/', {'first_name': 'a'}, format='json').status_code, (401, 403))
