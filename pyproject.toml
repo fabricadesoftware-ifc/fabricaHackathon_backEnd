@@ -1,0 +1,32 @@
+[project]
+name = "fabricaHackathon_backEnd"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "MatheusZenere", email = "matheus.vidal.zenere@gmail.com"},
+]
+dependencies = ["django>=6.0.6", "djangorestframework>=3.17.1", "djangorestframework-simplejwt>=5.5.1", "django-cors-headers>=4.9.0", "Pillow>=13.0.0", "cloudinary>=1.46.3", "django-cloudinary-storage>=0.3.0", "gunicorn>=26.2.0", "whitenoise>=6.12.0", "psycopg[binary]>=3.3.6", "dj-database-url>=3.1.2"]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.scripts]
+dev = "python manage.py runserver"
+runserver = "python manage.py runserver"
+createsuperuser = "python manage.py createsuperuser"
+migrate = "python manage.py migrate"
+makemigrations = "python manage.py makemigrations"
+shell = "python manage.py shell"
+test = "python manage.py test"
+startapp = "python manage.py startapp {args}"
+loaddata = "python manage.py loaddata {args}"
+dumpdata = "python manage.py dumpdata {args}"
+populate = "python scripts/populate_db.py"

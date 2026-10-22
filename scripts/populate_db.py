@@ -1,0 +1,237 @@
+import os
+import sys
+import django
+from datetime import date, timedelta
+from decimal import Decimal
+
+# Add the parent directory to sys.path so we can import from 'core'
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Set Django settings module
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_project.settings')
+django.setup()
+
+from core.hackathon.models import (
+    TipoEdicao, Apoiador, User, Edicao, Criterio, Tema, Projeto, Equipe, Nota, ParticipanteEquipe, AvaliadorEdicao
+)
+from core.hackathon.models.user import tipoUser
+
+def populate():
+    print("Iniciando a população do banco de dados...")
+
+    # 1. TipoEdicao
+    print("Criando TipoEdicao...")
+    tipo_presencial, _ = TipoEdicao.objects.get_or_create(nome='Presencial')
+    tipo_online, _ = TipoEdicao.objects.get_or_create(nome='Online')
+    tipo_hibrido, _ = TipoEdicao.objects.get_or_create(nome='Híbrido')
+
+    # 2. Apoiador
+    print("Criando Apoiadores...")
+    apoiador1, _ = Apoiador.objects.get_or_create(nome='TechCorp', defaults={'tipo': 'ouro'})
+    apoiador2, _ = Apoiador.objects.get_or_create(nome='DevStart', defaults={'tipo': 'prata'})
+    apoiador3, _ = Apoiador.objects.get_or_create(nome='InovaBank', defaults={'tipo': 'diamante'})
+
+    # 3. Edicao
+    print("Criando Edicao...")
+    edicao_2024, created = Edicao.objects.get_or_create(
+        nome='Hackathon Inovação 2024',
+        ano=2024,
+        defaults={
+            'descricao': 'O maior hackathon de inovação do ano.',
+            'status': 'INSCRICAO',
+            'data_inicio': date.today(),
+            'data_fim': date.today() + timedelta(days=3),
+            'minimo_participantes': 3,
+            'maximo_participantes': 5,
+            'maximo_equipes': 20,
+            'tipo_edicao': tipo_hibrido
+        }
+    )
+    if created:
+        edicao_2024.apoiadores.add(apoiador1, apoiador3)
+
+    # 4. Criterio
+    print("Criando Criterios...")
+    criterio_inovacao, _ = Criterio.objects.get_or_create(nome='Inovação', edicao=edicao_2024)
+    criterio_usabilidade, _ = Criterio.objects.get_or_create(nome='Usabilidade', edicao=edicao_2024)
+    criterio_impacto, _ = Criterio.objects.get_or_create(nome='Impacto Social', edicao=edicao_2024)
+
+    # 5. Tema
+    print("Criando Temas...")
+    tema_saude, _ = Tema.objects.get_or_create(descricao_tema='Saúde e Bem-estar', edicao=edicao_2024)
+    tema_educacao, _ = Tema.objects.get_or_create(descricao_tema='Educação do Futuro', edicao=edicao_2024)
+
+    # 6. Users
+    print("Criando Users...")
+    user1, _ = User.objects.get_or_create(
+        username='joao',
+        defaults={
+            'first_name': 'João Silva',
+            'email': 'joao@example.com',
+            'tipoUser': tipoUser.participante
+        }
+    )
+    if not user1.has_usable_password():
+        user1.set_password('123456')
+        user1.save()
+
+    user2, _ = User.objects.get_or_create(
+        username='maria',
+        defaults={
+            'first_name': 'Maria Souza',
+            'email': 'maria@example.com',
+            'tipoUser': tipoUser.avaliador
+        }
+    )
+    if not user2.has_usable_password():
+        user2.set_password('123456')
+        user2.save()
+
+    user_admin, _ = User.objects.get_or_create(
+        username='admin',
+        defaults={
+            'first_name': 'Administrador',
+            'email': 'admin@example.com',
+            'tipoUser': tipoUser.admin,
+            'is_staff': True,
+            'is_superuser': True
+        }
+    )
+    if not user_admin.has_usable_password():
+        user_admin.set_password('123456')
+        user_admin.save()
+
+    # 7. Projeto
+    print("Criando Projetos...")
+    projeto_saude, _ = Projeto.objects.get_or_create(
+        nome_projeto='App Vida Saudável',
+        edicao=edicao_2024,
+        defaults={
+            'descricao_projeto': 'Um aplicativo para monitorar hábitos de saúde.',
+            'link_deploy_projeto': 'https://vidasaudavel.example.com',
+            'notaFinal_projeto': None
+        }
+    )
+
+    projeto_edu, _ = Projeto.objects.get_or_create(
+        nome_projeto='Plataforma Educar',
+        edicao=edicao_2024,
+        defaults={
+            'descricao_projeto': 'Plataforma EAD para escolas públicas.',
+            'link_deploy_projeto': 'https://educar.example.com',
+            'notaFinal_projeto': None
+        }
+    )
+
+    # 8. Equipe
+    print("Criando Equipes...")
+    equipe_alpha, _ = Equipe.objects.get_or_create(
+        nome_equipe='Equipe Alpha',
+        edicao=edicao_2024,
+        defaults={
+            'tema': tema_saude,
+            'projeto': projeto_saude
+        }
+    )
+
+    equipe_beta, _ = Equipe.objects.get_or_create(
+        nome_equipe='Equipe Beta',
+        edicao=edicao_2024,
+        defaults={
+            'tema': tema_educacao,
+            'projeto': projeto_edu
+        }
+    )
+
+    # 9. ParticipanteEquipe
+    print("Associando Participantes às Equipes...")
+    ParticipanteEquipe.objects.get_or_create(
+        user=user1,
+        equipe=equipe_alpha
+    )
+
+    # 10. AvaliadorEdicao
+    print("Associando Avaliadores às Edições...")
+    avaliador_edicao, _ = AvaliadorEdicao.objects.get_or_create(
+        avaliador=user2,
+        edicao=edicao_2024
+    )
+
+    # 11. Nota
+    print("Criando Notas...")
+    Nota.objects.get_or_create(
+        projeto=projeto_saude,
+        criterio=criterio_inovacao,
+        avaliador=avaliador_edicao,
+        defaults={'nota': Decimal('8.50'), 'comentario_nota': 'Boa ideia, mas pode melhorar.'}
+    )
+    Nota.objects.get_or_create(
+        projeto=projeto_saude,
+        criterio=criterio_usabilidade,
+        avaliador=avaliador_edicao,
+        defaults={'nota': Decimal('9.00'), 'comentario_nota': 'Interface muito bonita.'}
+    )
+
+    # 12. Edições extras: uma em cada status, para o front ver todos os cenários
+    print("Criando edições de exemplo (uma por status)...")
+    edicao_2024.local = edicao_2024.local or 'Campus Videira - IFC'
+    edicao_2024.responsavel = edicao_2024.responsavel or 'Fábrica de Software'
+    edicao_2024.save()
+
+    hoje = date.today()
+    exemplos = [
+        # nome, ano, status, tipo, inicio, equipes: (equipe, tema, projeto, descricao, nota)
+        ('Hackathon Andamento 2025', 2025, 'EM_ANDAMENTO', tipo_presencial, hoje - timedelta(days=1), [
+            ('Code Rangers', 'Cidades Inteligentes', 'Rota Certa', 'Otimização de rotas do transporte público.', None),
+            ('Bit Builders', 'Agro Tech', 'Campo Digital', 'Gestão de pequenas propriedades rurais.', None),
+        ]),
+        ('Hackathon Avaliação 2023', 2023, 'AVALIACAO', tipo_online, hoje - timedelta(days=60), [
+            ('Neurônios', 'Inclusão Digital', 'Acessa+', 'Acessibilidade em sites públicos.', Decimal('8.70')),
+            ('Pixel Squad', 'Sustentabilidade', 'EcoTrack', 'Pegada de carbono pessoal.', Decimal('9.10')),
+        ]),
+        ('Hackathon Finalizado 2022', 2022, 'FINALIZADO', tipo_hibrido, hoje - timedelta(days=400), [
+            ('Os Compiladores', 'Educação', 'Estuda Fácil', 'Reforço escolar com gamificação.', Decimal('9.40')),
+            ('Debug Team', 'Saúde', 'Posto Online', 'Agendamento em postos de saúde.', Decimal('9.40')),
+            ('Stack Overflowers', 'Finanças', 'Poupa Já', 'Educação financeira para jovens.', Decimal('8.20')),
+        ]),
+    ]
+    for nome, ano, status, tipo, inicio, equipes in exemplos:
+        edicao, created = Edicao.objects.get_or_create(
+            nome=nome,
+            ano=ano,
+            defaults={
+                'descricao': f'Edição de exemplo no status {status}.',
+                'status': status,
+                'data_inicio': inicio,
+                'data_fim': inicio + timedelta(days=3),
+                'local': 'Campus Videira - IFC',
+                'responsavel': 'Fábrica de Software',
+                'minimo_participantes': 3,
+                'maximo_participantes': 5,
+                'maximo_equipes': 20,
+                'tipo_edicao': tipo,
+            },
+        )
+        if created:
+            edicao.apoiadores.add(apoiador1, apoiador2)
+        for criterio in ('Inovação', 'Usabilidade', 'Impacto Social'):
+            Criterio.objects.get_or_create(nome=criterio, edicao=edicao)
+        for nome_equipe, tema_desc, nome_projeto, descricao, nota in equipes:
+            tema, _ = Tema.objects.get_or_create(descricao_tema=tema_desc, edicao=edicao)
+            projeto, _ = Projeto.objects.get_or_create(
+                nome_projeto=nome_projeto,
+                edicao=edicao,
+                defaults={
+                    'descricao_projeto': descricao,
+                    'link_deploy_projeto': f'https://{nome_projeto.lower().replace(" ", "").replace("+", "mais")}.example.com',
+                    'notaFinal_projeto': nota,
+                },
+            )
+            Equipe.objects.get_or_create(
+                nome_equipe=nome_equipe, edicao=edicao, defaults={'tema': tema, 'projeto': projeto}
+            )
+
+    print("Banco de dados populado com sucesso!")
+
+if __name__ == '__main__':
+    populate()
