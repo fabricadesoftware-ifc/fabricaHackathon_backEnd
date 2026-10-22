@@ -59,3 +59,20 @@ class PainelAdminTest(Base):
         self.assertEqual(linha["por_criterio"][0]["media"], "8.00")
         self.assertTrue(linha["completo"])
         self.assertEqual(linha["posicao"], 1)
+
+
+class FalhaStorageTest(Base):
+    def test_falha_no_storage_vira_400(self):
+        from io import BytesIO
+        from unittest import mock
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        buf = BytesIO()
+        Image.new("RGB", (10, 10)).save(buf, "PNG")
+        foto = SimpleUploadedFile("f.png", buf.getvalue(), content_type="image/png")
+        with mock.patch("django.core.files.storage.FileSystemStorage._save", side_effect=RuntimeError("cloud off")):
+            r = self.as_user(self.u1).patch("/api/me/", {"first_name": "Ana", "foto_perfil": foto}, format="multipart")
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("foto_perfil", r.data)
