@@ -2,7 +2,8 @@ from datetime import date, timedelta
 from decimal import Decimal
 from unittest import mock
 
-from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from .models import (
@@ -579,3 +580,42 @@ class RankingTest(Base):
         self.assertEqual(len(body), 6)
         self.assertEqual([i['posicao'] for i in body], [1, 1, 3, 4, 5, 6])
         self.assertTrue(all(i['equipe'] for i in body))
+
+
+@override_settings(STORAGES={
+    'default': {'BACKEND': 'django.core.files.storage.InMemoryStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+})
+class LogoProjetoInscricaoTest(Base):
+    def setUp(self):
+        super().setUp()
+        from .test_imagens import imagem
+        self.imagem = imagem
+        self.equipe = self.criar_equipe('Alfa', self.u1, [self.u2])
+        self.url = f'/api/inscricoes/{self.equipe.id}/logo/'
+
+    def test_criador_envia_troca_e_remove_logo(self):
+        c = self.as_user(self.u1)
+        r = c.post(self.url, {'logo_projeto': self.imagem()}, format='multipart')
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertTrue(r.data['projeto']['logo_projeto'].startswith('http'))
+        r = c.post(self.url, {'logo_projeto': self.imagem('JPEG', 'b.jpg')}, format='multipart')
+        self.assertEqual(r.status_code, 200, r.content)
+        r = c.delete(self.url)
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertIsNone(r.data['projeto']['logo_projeto'])
+
+    def test_exige_arquivo_e_formato_valido(self):
+        c = self.as_user(self.u1)
+        self.assertEqual(c.post(self.url, {}, format='multipart').status_code, 400)
+        ruim = SimpleUploadedFile('x.png', b'nao e imagem', content_type='image/png')
+        self.assertEqual(c.post(self.url, {'logo_projeto': ruim}, format='multipart').status_code, 400)
+
+    def test_nao_criador_e_terceiro_nao_alteram(self):
+        self.assertEqual(self.as_user(self.u2).post(self.url, {'logo_projeto': self.imagem()}, format='multipart').status_code, 403)
+        self.assertEqual(self.as_user(self.u3).post(self.url, {'logo_projeto': self.imagem()}, format='multipart').status_code, 404)
+
+    def test_bloqueado_fora_da_fase_de_inscricao(self):
+        Edicao.objects.filter(pk=self.edicao.pk).update(status='EM_ANDAMENTO')
+        r = self.as_user(self.u1).post(self.url, {'logo_projeto': self.imagem()}, format='multipart')
+        self.assertEqual(r.status_code, 400)

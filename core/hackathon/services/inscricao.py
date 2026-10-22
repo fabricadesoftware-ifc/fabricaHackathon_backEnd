@@ -16,6 +16,12 @@ def _exigir_inscricao_aberta(edicao):
         raise ValidationError({'edicao': 'As inscrições desta edição não estão abertas.'})
 
 
+def exigir_inscricao_aberta(equipe):
+    """Garante (com a edição travada) que a edição da equipe ainda está em INSCRICAO."""
+    with transaction.atomic():
+        _exigir_inscricao_aberta(_travar_edicao(equipe.edicao_id))
+
+
 def _resolver_membros(edicao, emails, ignorar_equipe=None, ignorar_usuarios=()):
     """Converte e-mails em usuários, validando cada regra com mensagens por e-mail."""
     erros = []

@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -9,6 +10,7 @@ from ..permissions import IsParticipante
 from ..serializers.inscricao import (
     InscricaoAtualizacaoSerializer,
     InscricaoSerializer,
+    LogoProjetoSerializer,
     MembrosSerializer,
     MinhaEquipeSerializer,
 )
@@ -81,3 +83,17 @@ class InscricaoViewSet(GenericViewSet):
             raise PermissionDenied('O criador não pode sair da equipe; exclua a equipe se necessário.')
         servico.remover_membro(equipe, request.user.pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post', 'delete'], url_path='logo',
+            parser_classes=[MultiPartParser, FormParser, JSONParser])
+    def logo(self, request, pk=None):
+        """POST (multipart `logo_projeto`) envia/troca a logo; DELETE remove. Só o criador, em INSCRICAO."""
+        equipe = self._equipe_do_criador()
+        servico.exigir_inscricao_aberta(equipe)
+        dados = {'logo_projeto': None} if request.method == 'DELETE' else request.data
+        serializer = LogoProjetoSerializer(equipe.projeto, data=dados, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        if request.method == 'POST' and not serializer.validated_data.get('logo_projeto'):
+            raise ValidationError({'logo_projeto': 'Envie o arquivo da logo.'})
+        serializer.save()
+        return self._resposta(equipe)

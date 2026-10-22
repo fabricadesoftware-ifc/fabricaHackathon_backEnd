@@ -78,6 +78,9 @@ Parcial: `nome_equipe`, `tema`, `projeto: {nome_projeto, descricao_projeto, link
 ### `DELETE /api/inscricoes/{equipe_id}/membros/{usuario_id}/` — criador
 Remove um integrante (não o criador; não pode ficar abaixo do mínimo). Devolve a equipe.
 
+### `POST /api/inscricoes/{equipe_id}/logo/` e `DELETE /api/inscricoes/{equipe_id}/logo/` — criador
+`POST` com `multipart/form-data` e o campo `logo_projeto` (JPEG, PNG ou WebP, até 5 MB) envia ou troca a logo do projeto; `DELETE` remove. Só o criador e só com a edição em `INSCRICAO` (`400` fora disso). Devolve a equipe no formato de `GET /api/me/equipes/`. Arquivo ausente ou inválido → `400 {"logo_projeto": ...}`.
+
 ### `POST /api/inscricoes/{equipe_id}/sair/` — integrante não criador
 `204`. Não pode deixar a equipe abaixo do mínimo (`400`); o criador deve excluir a equipe (`403`).
 
