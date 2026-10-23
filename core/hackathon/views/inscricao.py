@@ -49,7 +49,6 @@ class InscricaoViewSet(GenericViewSet):
         serializer = InscricaoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         equipe = servico.criar_inscricao(request.user, serializer.validated_data)
-        servico_convites.enviar_novos(equipe)
         return self._resposta(equipe, status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk=None):
@@ -70,7 +69,6 @@ class InscricaoViewSet(GenericViewSet):
         serializer = MembrosSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         servico.adicionar_membros(equipe, serializer.validated_data['membros'])
-        servico_convites.enviar_novos(equipe)
         return self._resposta(equipe)
 
     @action(detail=True, methods=['post', 'delete'], url_path='link-convite')
@@ -81,18 +79,6 @@ class InscricaoViewSet(GenericViewSet):
             servico_convites.gerar_link(equipe)
         else:
             servico_convites.revogar_link(equipe)
-        return self._resposta(equipe)
-
-    @action(detail=True, methods=['delete'], url_path=r'convites/(?P<convite_id>\d+)')
-    def cancelar_convite(self, request, pk=None, convite_id=None):
-        equipe = self._equipe_do_criador()
-        servico_convites.cancelar_convite(equipe, int(convite_id))
-        return self._resposta(equipe)
-
-    @action(detail=True, methods=['post'], url_path=r'convites/(?P<convite_id>\d+)/reenviar')
-    def reenviar_convite(self, request, pk=None, convite_id=None):
-        equipe = self._equipe_do_criador()
-        servico_convites.reenviar_convite(equipe, int(convite_id))
         return self._resposta(equipe)
 
     @action(detail=True, methods=['delete'], url_path=r'membros/(?P<usuario_id>\d+)')

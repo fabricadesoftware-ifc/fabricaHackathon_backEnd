@@ -295,17 +295,18 @@ class InscricaoTest(Base):
         self.assertFalse(Equipe.objects.filter(nome_equipe='Alfa').exists())
 
     def test_maximo_conta_o_criador_e_minimo_nao_barra_a_inscricao(self):
-        # O mínimo só vale ao fechar as inscrições: dá para inscrever só o criador e convidar depois.
-        self.assertEqual(self.inscrever(user=self.u4, membros=[], nome_equipe='Solo').status_code, 201)
-        r = self.inscrever(membros=['u2@t.com', 'u3@t.com', 'x@t.com'])
+        r = self.inscrever(membros=['u2@t.com', 'u3@t.com', 'u4@t.com'])
         self.assertEqual(r.status_code, 400)
         self.assertIn('máximo 3', str(r.json()['membros']).replace('no máximo', 'máximo'))
+        # O mínimo só vale ao fechar as inscrições: dá para inscrever só o criador e completar depois pelo link.
+        self.assertEqual(self.inscrever(user=self.u4, membros=[], nome_equipe='Solo').status_code, 201)
         self.assertEqual(self.inscrever(membros=['u2@t.com', 'u3@t.com']).status_code, 201)
 
     def test_emails_invalidos(self):
         casos = {
             'aval@t.com': 'não tem perfil de Participante',
             'prof@t.com': 'não tem perfil de Participante',
+            'inexistente@t.com': 'Nenhum usuário cadastrado',
             'u1@t.com': 'seu próprio e-mail',
         }
         for email, trecho in casos.items():

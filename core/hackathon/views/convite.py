@@ -23,7 +23,6 @@ class ConviteInfoView(APIView):
             "equipe": equipe.nome_equipe,
             "edicao": equipe.edicao.nome,
             "criador": (criador.get_full_name().strip() or criador.email) if criador else None,
-            "email_convidado": convite.email or None,
         })
 
 

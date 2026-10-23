@@ -118,7 +118,7 @@ class PainelEquipesView(APIView):
         equipes = (
             Equipe.objects.filter(edicao=edicao)
             .select_related("tema", "projeto", "criador")
-            .prefetch_related("participantes__user", "convites")
+            .prefetch_related("participantes__user")
             .order_by("nome_equipe")
         )
         pre = {p.projeto_id: p for p in PreAvaliacao.objects.filter(projeto__edicao=edicao)}
@@ -131,9 +131,6 @@ class PainelEquipesView(APIView):
                 "id": equipe.id,
                 "nome_equipe": equipe.nome_equipe,
                 "abaixo_do_minimo": len(membros) < edicao.minimo_participantes,
-                "convites_pendentes": [
-                    c.email for c in equipe.convites.all() if c.email and c.status == "PENDENTE"
-                ],
                 "tema": equipe.tema.descricao_tema if equipe.tema else None,
                 "criador": _nome(equipe.criador) if equipe.criador else None,
                 "membros": [
