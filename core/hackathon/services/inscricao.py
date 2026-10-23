@@ -2,7 +2,7 @@ from django.db import transaction
 from django.db.models import ProtectedError
 from rest_framework.exceptions import ValidationError
 
-from ..models import Edicao, Equipe, ParticipanteEquipe, Projeto, User
+from ..models import ConviteEquipe, Edicao, Equipe, ParticipanteEquipe, Projeto, User
 from ..models.user import tipoUser
 
 
@@ -34,11 +34,15 @@ def exigir_inscricao_aberta(equipe):
         _exigir_inscricao_aberta(_travar_edicao(equipe.edicao_id))
 
 
-def _resolver_membros(edicao, emails, ignorar_equipe=None, ignorar_usuarios=()):
-    """Converte e-mails em usuários, validando cada regra com mensagens por e-mail."""
+def _resolver_membros(edicao, emails, ignorar_equipe=None, ignorar_usuarios=(), emails_ja_convidados=()):
+    """
+    Separa e-mails em usuários já cadastrados (entram direto) e e-mails sem conta (viram convite),
+    validando cada regra com mensagens por e-mail. Devolve (usuarios, emails_para_convidar).
+    """
     erros = []
     vistos = set()
     usuarios = []
+    convidar = []
     for bruto in emails:
         email = bruto.strip().lower()
         if email in vistos:
@@ -47,7 +51,10 @@ def _resolver_membros(edicao, emails, ignorar_equipe=None, ignorar_usuarios=()):
         vistos.add(email)
         usuario = User.objects.filter(email__iexact=email).first()
         if usuario is None:
-            erros.append(f"Nenhum usuário cadastrado com o e-mail {email}.")
+            if email in emails_ja_convidados:
+                erros.append(f"O e-mail {email} já foi convidado para esta equipe.")
+            else:
+                convidar.append(email)
             continue
         if usuario.pk in ignorar_usuarios:
             erros.append(f"O e-mail {email} já pertence a esta equipe.")
@@ -65,20 +72,21 @@ def _resolver_membros(edicao, emails, ignorar_equipe=None, ignorar_usuarios=()):
         usuarios.append(usuario)
     if erros:
         raise ValidationError({'membros': erros})
-    return usuarios
+    return usuarios, convidar
 
 
 def _validar_total(edicao, total):
+    """Máximo vale desde a inscrição (membros + convites por e-mail pendentes). O mínimo vale ao fechar as inscrições."""
     if total > edicao.maximo_participantes:
         raise ValidationError({
-            'membros': f"A equipe pode ter no máximo {edicao.maximo_participantes} participantes (contando você); "
-                       f"foram informados {total}."
+            'membros': f"A equipe pode ter no máximo {edicao.maximo_participantes} participantes (contando você e "
+                       f"os convites enviados); foram informados {total}."
         })
-    if total < edicao.minimo_participantes:
-        raise ValidationError({
-            'membros': f"A equipe precisa de no mínimo {edicao.minimo_participantes} participantes (contando você); "
-                       f"foram informados {total}."
-        })
+
+
+def _criar_convites(equipe, emails):
+    novos = [ConviteEquipe.objects.create(equipe=equipe, email=e) for e in emails]
+    equipe._novos_convites = getattr(equipe, '_novos_convites', []) + novos
 
 
 def criar_inscricao(criador, dados):
@@ -103,8 +111,8 @@ def criar_inscricao(criador, dados):
         emails = dados.get('membros', [])
         if any(e.strip().lower() == criador.email.lower() for e in emails):
             raise ValidationError({'membros': 'Não inclua o seu próprio e-mail: você já é membro da equipe.'})
-        membros = _resolver_membros(edicao, emails)
-        _validar_total(edicao, len(membros) + 1)
+        membros, convidar = _resolver_membros(edicao, emails)
+        _validar_total(edicao, len(membros) + len(convidar) + 1)
 
         projeto = Projeto.objects.create(edicao=edicao, **dados['projeto'])
         equipe = Equipe.objects.create(
@@ -112,6 +120,7 @@ def criar_inscricao(criador, dados):
         )
         for usuario in [criador, *membros]:
             ParticipanteEquipe.objects.create(user=usuario, equipe=equipe)
+        _criar_convites(equipe, convidar)
         return equipe
 
 
@@ -144,15 +153,15 @@ def adicionar_membros(equipe, emails):
         edicao = _travar_edicao(equipe.edicao_id)
         _exigir_inscricao_aberta(edicao)
         atuais = list(equipe.participantes.values_list('user_id', flat=True))
-        novos = _resolver_membros(edicao, emails, ignorar_equipe=equipe, ignorar_usuarios=atuais)
-        total = len(atuais) + len(novos)
-        if total > edicao.maximo_participantes:
-            raise ValidationError({
-                'membros': f"A equipe pode ter no máximo {edicao.maximo_participantes} participantes; "
-                           f"com estes e-mails ficaria com {total}."
-            })
+        pendentes = list(equipe.convites.filter(status='PENDENTE').exclude(email='').values_list('email', flat=True))
+        novos, convidar = _resolver_membros(
+            edicao, emails, ignorar_equipe=equipe, ignorar_usuarios=atuais,
+            emails_ja_convidados={e.lower() for e in pendentes},
+        )
+        _validar_total(edicao, len(atuais) + len(pendentes) + len(novos) + len(convidar))
         for usuario in novos:
             ParticipanteEquipe.objects.create(user=usuario, equipe=equipe)
+        _criar_convites(equipe, convidar)
         return equipe
 
 
@@ -165,10 +174,6 @@ def remover_membro(equipe, usuario_id):
         vinculo = equipe.participantes.filter(user_id=usuario_id).first()
         if vinculo is None:
             raise ValidationError({'detail': 'Este usuário não faz parte da equipe.'})
-        if equipe.participantes.count() - 1 < edicao.minimo_participantes:
-            raise ValidationError({
-                'detail': f"A equipe precisa de no mínimo {edicao.minimo_participantes} participantes."
-            })
         vinculo.delete()
 
 

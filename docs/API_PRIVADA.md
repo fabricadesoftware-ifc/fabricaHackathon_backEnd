@@ -238,3 +238,15 @@ Somente **membros da equipe**. Aceita `application/json` ou `multipart/form-data
 | DELETE | `/api/painel/edicoes/{id}/avaliadores/{user_id}/` | Desvincula (400 se já lançou notas) |
 
 Status, pré-avaliação (`pre_avaliacao_liberada`, `prazo_pre_avaliacao`) e demais dados seguem em `PATCH /api/edicoes/{id}/`.
+
+## Convites de equipe
+
+O mínimo de participantes **não** é exigido na inscrição (vale ao fechar as inscrições; o painel admin marca `abaixo_do_minimo`). O máximo conta membros + convites por e-mail pendentes.
+
+- E-mails sem conta em `membros` (`POST /api/inscricoes/` ou `POST /api/inscricoes/{id}/membros/`) viram convite "enviado" e recebem e-mail com o link `FRONTEND_URL/convite/<token>`. E-mails de usuários já cadastrados continuam entrando direto.
+- `MinhaEquipe` ganha `convites` (pendentes por e-mail: `id, email, status, email_enviado`), `link_convite` (só o criador: `id, token, url`), `minimo_participantes`, `maximo_participantes`.
+- `POST /api/inscricoes/{id}/link-convite/` gera (ou troca) o link reutilizável da equipe; `DELETE` revoga.
+- `DELETE /api/inscricoes/{id}/convites/{cid}/` cancela; `POST .../convites/{cid}/reenviar/` reenvia o e-mail.
+- `GET /api/convites/{token}/` (público) → `valido, motivo, equipe, edicao, criador, email_convidado`.
+- `POST /api/convites/{token}/aceitar/` (Participante logado) entra na equipe (só em INSCRICAO, se houver vaga).
+- Variáveis de e-mail: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL`, `FRONTEND_URL`. Sem SMTP o convite é criado com `email_enviado=false` e o criador copia o link.

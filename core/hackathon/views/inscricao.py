@@ -14,6 +14,7 @@ from ..serializers.inscricao import (
     MembrosSerializer,
     MinhaEquipeSerializer,
 )
+from ..services import convites as servico_convites
 from ..services import inscricao as servico
 
 
@@ -30,7 +31,7 @@ class InscricaoViewSet(GenericViewSet):
         return (
             Equipe.objects.filter(participantes__user=self.request.user)
             .select_related('tema', 'edicao', 'projeto__edicao', 'criador')
-            .prefetch_related('participantes__user')
+            .prefetch_related('participantes__user', 'convites')
         )
 
     def _equipe_do_criador(self):
@@ -48,6 +49,7 @@ class InscricaoViewSet(GenericViewSet):
         serializer = InscricaoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         equipe = servico.criar_inscricao(request.user, serializer.validated_data)
+        servico_convites.enviar_novos(equipe)
         return self._resposta(equipe, status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk=None):
@@ -68,6 +70,29 @@ class InscricaoViewSet(GenericViewSet):
         serializer = MembrosSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         servico.adicionar_membros(equipe, serializer.validated_data['membros'])
+        servico_convites.enviar_novos(equipe)
+        return self._resposta(equipe)
+
+    @action(detail=True, methods=['post', 'delete'], url_path='link-convite')
+    def link_convite(self, request, pk=None):
+        """POST gera (ou troca) o link de convite da equipe; DELETE revoga. Só o criador."""
+        equipe = self._equipe_do_criador()
+        if request.method == 'POST':
+            servico_convites.gerar_link(equipe)
+        else:
+            servico_convites.revogar_link(equipe)
+        return self._resposta(equipe)
+
+    @action(detail=True, methods=['delete'], url_path=r'convites/(?P<convite_id>\d+)')
+    def cancelar_convite(self, request, pk=None, convite_id=None):
+        equipe = self._equipe_do_criador()
+        servico_convites.cancelar_convite(equipe, int(convite_id))
+        return self._resposta(equipe)
+
+    @action(detail=True, methods=['post'], url_path=r'convites/(?P<convite_id>\d+)/reenviar')
+    def reenviar_convite(self, request, pk=None, convite_id=None):
+        equipe = self._equipe_do_criador()
+        servico_convites.reenviar_convite(equipe, int(convite_id))
         return self._resposta(equipe)
 
     @action(detail=True, methods=['delete'], url_path=r'membros/(?P<usuario_id>\d+)')

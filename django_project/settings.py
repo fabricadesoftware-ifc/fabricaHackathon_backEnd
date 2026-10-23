@@ -249,3 +249,16 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+
+# E-mail (convites de equipe). Sem EMAIL_HOST o envio falha com segurança: o convite continua criado
+# e o criador da equipe pode copiar o link para mandar manualmente.
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587" if os.environ.get("EMAIL_HOST") else "25"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1" if os.environ.get("EMAIL_HOST") else "0") == "1"
+EMAIL_TIMEOUT = 10
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "hackifc@localhost")
+# Endereço público do front, usado nos links de convite.
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://hackifc.fabricadesoftware.ifc.edu.br").rstrip("/")
