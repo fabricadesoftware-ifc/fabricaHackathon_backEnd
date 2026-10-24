@@ -57,7 +57,7 @@ class MeuProjetoSerializer(serializers.ModelSerializer):
 
     def get_equipe(self, projeto):
         equipe = getattr(projeto, 'equipes', None)
-        return {'id': equipe.id, 'nome_equipe': equipe.nome_equipe} if equipe else None
+        return {'id': equipe.id, 'nome_equipe': equipe.nome_equipe, 'organizadora': equipe.organizadora} if equipe else None
 
 
 class MinhaEquipeSerializer(serializers.ModelSerializer):
@@ -75,7 +75,7 @@ class MinhaEquipeSerializer(serializers.ModelSerializer):
         model = Equipe
         fields = [
             'id', 'nome_equipe', 'edicao', 'edicao_status', 'tema_id', 'tema',
-            'criador', 'sou_criador', 'membros', 'projeto', 'link_convite',
+            'criador', 'sou_criador', 'membros', 'projeto', 'link_convite', 'organizadora',
             'minimo_participantes', 'maximo_participantes',
         ]
 

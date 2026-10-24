@@ -51,11 +51,12 @@ class EquipePublicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Equipe
-        fields = ["id", "nome_equipe", "edicao", "tema", "projeto"]
+        fields = ["id", "nome_equipe", "edicao", "tema", "projeto", "organizadora"]
 
 
 class ProjetoPublicSerializer(serializers.ModelSerializer):
     nome_equipe = serializers.CharField(source="equipes.nome_equipe", read_only=True, default=None)
+    equipe_organizadora = serializers.BooleanField(source="equipes.organizadora", read_only=True, default=False)
     nota_final = serializers.SerializerMethodField()
 
     class Meta:
@@ -68,6 +69,7 @@ class ProjetoPublicSerializer(serializers.ModelSerializer):
             "logo_projeto",
             "edicao",
             "nome_equipe",
+            "equipe_organizadora",
             "nota_final",
         ]
 

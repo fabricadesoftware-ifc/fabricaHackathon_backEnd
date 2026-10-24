@@ -11,10 +11,12 @@ def recalcular_nota_final(projeto):
     from ..models import AvaliadorEdicao, Criterio, Nota, PreAvaliacao, Projeto
     from .pre_avaliacao import PESO_AVALIADORES, PESO_PRE_AVALIACAO
 
+    equipe = getattr(projeto, 'equipes', None)
+    fora = bool(equipe is not None and equipe.organizadora)  # equipe da Fábrica não é avaliada
     total_criterios = Criterio.objects.filter(edicao_id=projeto.edicao_id).count()
     avaliadores = list(AvaliadorEdicao.objects.filter(edicao_id=projeto.edicao_id).values_list('id', flat=True))
     nova = None
-    if total_criterios and avaliadores:
+    if total_criterios and avaliadores and not fora:
         medias = []
         for avaliador_id in avaliadores:
             valores = list(

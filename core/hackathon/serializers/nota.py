@@ -6,6 +6,7 @@ from ..validations.nota_validation import (
     validate_avaliacao_aberta,
     validate_nota_edicao,
     validate_nota_unica,
+    validate_projeto_avaliavel,
 )
 
 
@@ -43,6 +44,7 @@ class NotaSerializer(serializers.ModelSerializer):
 
         if projeto:
             validate_avaliacao_aberta(projeto.edicao)
+            validate_projeto_avaliavel(projeto)
         validate_nota_edicao(avaliador, projeto, criterio)
         validate_nota_unica(avaliador, projeto, criterio, instance=self.instance)
         attrs['_avaliador'] = avaliador
@@ -91,6 +93,7 @@ class NotaLoteSerializer(serializers.Serializer):
         attrs['avaliador'] = avaliador
 
         validate_avaliacao_aberta(projeto.edicao)
+        validate_projeto_avaliavel(projeto)
 
         if not notas_data:
             raise serializers.ValidationError({"notas": "A lista de notas não pode ser vazia."})

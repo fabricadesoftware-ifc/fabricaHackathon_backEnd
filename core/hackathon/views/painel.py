@@ -1,6 +1,7 @@
 """Painel de controle do administrador: visões agregadas por edição (somente ADMIN)."""
 from decimal import Decimal
 
+from django.db import transaction
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -27,7 +28,8 @@ def _dec(valor):
 def _contagens(edicao):
     equipes = Equipe.objects.filter(edicao=edicao)
     return {
-        "equipes": equipes.count(),
+        "equipes": equipes.filter(organizadora=False).count(),
+        "equipes_fabrica": equipes.filter(organizadora=True).count(),
         "maximo_equipes": edicao.maximo_equipes,
         "participantes": ParticipanteEquipe.objects.filter(equipe__edicao=edicao).count(),
         "avaliadores": AvaliadorEdicao.objects.filter(edicao=edicao).count(),
@@ -61,7 +63,7 @@ def _dados_edicao(edicao):
 
 def _progresso_avaliadores(edicao):
     """Notas lançadas x esperadas (projetos x critérios) por avaliador vinculado."""
-    projetos = Projeto.objects.filter(edicao=edicao).count()
+    projetos = Projeto.objects.filter(edicao=edicao).exclude(equipes__organizadora=True).count()
     criterios = Criterio.objects.filter(edicao=edicao).count()
     esperadas = projetos * criterios
     lancadas = dict(
@@ -129,6 +131,7 @@ class PainelEquipesView(APIView):
             membros = list(equipe.participantes.all())
             itens.append({
                 "id": equipe.id,
+                "organizadora": equipe.organizadora,
                 "nome_equipe": equipe.nome_equipe,
                 "abaixo_do_minimo": len(membros) < edicao.minimo_participantes,
                 "tema": equipe.tema.descricao_tema if equipe.tema else None,
@@ -159,7 +162,7 @@ class PainelResultadosView(APIView):
         edicao = get_object_or_404(Edicao, pk=pk)
         criterios = list(Criterio.objects.filter(edicao=edicao).order_by("id"))
         vinculos = list(AvaliadorEdicao.objects.filter(edicao=edicao).select_related("avaliador").order_by("id"))
-        notas = list(Nota.objects.filter(projeto__edicao=edicao))
+        notas = list(Nota.objects.filter(projeto__edicao=edicao, projeto__equipes__organizadora=False))
 
         por_projeto = {}
         for n in notas:
@@ -168,7 +171,7 @@ class PainelResultadosView(APIView):
         pre = {p.projeto_id: p.nota for p in PreAvaliacao.objects.filter(projeto__edicao=edicao)}
 
         linhas = []
-        for equipe in Equipe.objects.filter(edicao=edicao).select_related("projeto").order_by("nome_equipe"):
+        for equipe in Equipe.objects.filter(edicao=edicao, organizadora=False).select_related("projeto").order_by("nome_equipe"):
             projeto = equipe.projeto
             ns = por_projeto.get(projeto.id, [])
 
@@ -260,3 +263,85 @@ class PainelAvaliadoresView(APIView):
             raise ValidationError({"detail": "Este avaliador já lançou notas nesta edição e não pode ser desvinculado."})
         vinculo.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PainelEquipeFabricaView(APIView):
+    """
+    POST /api/painel/edicoes/{id}/equipe-fabrica/ — cadastra a equipe da Fábrica (organizadora): fora da avaliação,
+        do ranking e do limite de equipes. Aceita a qualquer momento antes de FINALIZADO.
+        Corpo: {"nome_equipe", "nome_projeto", "descricao_projeto"?, "link_deploy_projeto"?, "membros"?: [e-mails de participantes]}
+    PATCH /api/painel/edicoes/{id}/equipes/{equipe_id}/ — {"organizadora": true|false} marca/desmarca uma equipe existente.
+    """
+
+    permission_classes = [IsAdmin]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        edicao = get_object_or_404(Edicao.objects.select_for_update(), pk=pk)
+        bloquear_se_finalizada(edicao)
+        dados = request.data
+        nome = (dados.get("nome_equipe") or "").strip()
+        projeto_nome = (dados.get("nome_projeto") or "").strip()
+        erros = {}
+        if not nome:
+            erros["nome_equipe"] = "Informe o nome da equipe."
+        if not projeto_nome:
+            erros["nome_projeto"] = "Informe o nome do projeto."
+        if nome and Equipe.objects.filter(edicao=edicao, nome_equipe__iexact=nome).exists():
+            erros["nome_equipe"] = "Já existe uma equipe com este nome nesta edição."
+        usuarios = []
+        mensagens = []
+        for email in dados.get("membros") or []:
+            usuario = User.objects.filter(email__iexact=str(email).strip()).first()
+            if usuario is None:
+                mensagens.append(f"Nenhum usuário cadastrado com o e-mail {email}.")
+            elif usuario.tipoUser != tipoUser.participante:
+                mensagens.append(f"O usuário {email} não tem perfil de Participante.")
+            elif ParticipanteEquipe.objects.filter(user=usuario, equipe__edicao=edicao).exists():
+                mensagens.append(f"O usuário {email} já faz parte de uma equipe nesta edição.")
+            elif usuario in usuarios:
+                mensagens.append(f"O e-mail {email} foi informado mais de uma vez.")
+            else:
+                usuarios.append(usuario)
+        if mensagens:
+            erros["membros"] = mensagens
+        if len(usuarios) > edicao.maximo_participantes:
+            erros["membros"] = [f"No máximo {edicao.maximo_participantes} participantes por equipe."]
+        if erros:
+            raise ValidationError(erros)
+
+        projeto = Projeto.objects.create(
+            edicao=edicao, nome_projeto=projeto_nome,
+            descricao_projeto=(dados.get("descricao_projeto") or "").strip(),
+            link_deploy_projeto=(dados.get("link_deploy_projeto") or None),
+        )
+        equipe = Equipe.objects.create(
+            nome_equipe=nome, edicao=edicao, projeto=projeto, organizadora=True,
+            criador=usuarios[0] if usuarios else None,
+        )
+        for usuario in usuarios:
+            ParticipanteEquipe.objects.create(user=usuario, equipe=equipe)
+        return Response({"id": equipe.id, "organizadora": True}, status=status.HTTP_201_CREATED)
+
+
+class PainelEquipeMarcacaoView(APIView):
+    permission_classes = [IsAdmin]
+
+    @transaction.atomic
+    def patch(self, request, pk, equipe_id):
+        edicao = get_object_or_404(Edicao, pk=pk)
+        bloquear_se_finalizada(edicao)
+        equipe = get_object_or_404(Equipe.objects.select_related("projeto"), pk=equipe_id, edicao=edicao)
+        if "organizadora" not in request.data:
+            raise ValidationError({"organizadora": "Informe true ou false."})
+        valor = request.data["organizadora"]
+        equipe.organizadora = valor in (True, "true", "True", "1", 1)
+        equipe.save(update_fields=["organizadora"])
+        if equipe.organizadora:
+            # sai da avaliação: apaga a nota final e as notas já lançadas para este projeto
+            Nota.objects.filter(projeto=equipe.projeto).delete()
+            Projeto.objects.filter(pk=equipe.projeto_id).update(notaFinal_projeto=None)
+        else:
+            from ..services.nota_final import recalcular_nota_final
+            recalcular_nota_final(equipe.projeto)
+        return Response({"id": equipe.id, "organizadora": equipe.organizadora})

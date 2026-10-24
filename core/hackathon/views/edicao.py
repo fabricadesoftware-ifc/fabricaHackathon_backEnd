@@ -1,4 +1,4 @@
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.db.models import Prefetch
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -41,7 +41,7 @@ class EdicaoViewSet(BloqueiaEdicaoFinalizadaMixin, ModelViewSet):
         if self.action not in ('list', 'retrieve', 'ranking'):
             return queryset
 
-        queryset = queryset.select_related('tipo_edicao').annotate(total_equipes=Count('equipes'))
+        queryset = queryset.select_related('tipo_edicao').annotate(total_equipes=Count('equipes', filter=Q(equipes__organizadora=False)))
 
         if self.action == 'retrieve':
             queryset = queryset.prefetch_related(
@@ -79,6 +79,7 @@ class EdicaoViewSet(BloqueiaEdicaoFinalizadaMixin, ModelViewSet):
 
         projetos = (
             Projeto.objects.filter(edicao=edicao, notaFinal_projeto__isnull=False)
+            .exclude(equipes__organizadora=True)
             .select_related('equipes')
             .order_by('-notaFinal_projeto', 'nome_projeto', 'id')
         )
