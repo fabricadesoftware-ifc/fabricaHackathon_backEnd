@@ -194,7 +194,7 @@ Membros da equipe, administrador, professor e avaliadores da edição (somente l
 ```
 
 ### `PATCH /api/me/projetos/{projeto_id}/pre-avaliacao/` (também `PUT`; sempre parcial)
-Somente **membros da equipe**. Aceita `application/json` ou `multipart/form-data` (necessário para enviar arquivos; nesse caso mande `responsabilidades` como string JSON). Pode salvar por partes: a nota é recalculada a cada gravação e devolvida na resposta (`nota`, `detalhe_pontuacao`).
+Somente o **criador da equipe** responde (os demais integrantes recebem `403` e só visualizam; o GET traz `pode_editar`). Aceita `application/json` ou `multipart/form-data` (necessário para enviar arquivos; nesse caso mande `responsabilidades` como string JSON). Pode salvar por partes: a nota é recalculada a cada gravação e devolvida na resposta (`nota`, `detalhe_pontuacao`).
 
 | Campo | Regra |
 |---|---|

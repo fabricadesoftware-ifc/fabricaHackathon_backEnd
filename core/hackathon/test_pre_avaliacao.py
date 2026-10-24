@@ -90,6 +90,20 @@ class PreAvaliacaoTest(Base):
         self.assertEqual(r.status_code, 200, r.content)
         self.assertEqual(r.json()["nota"], "10.00")  # RFs por arquivo, arquitetura por link, nada local
 
+    def test_so_o_criador_responde_os_demais_apenas_veem(self):
+        self.assertEqual(self.enviar(arquivos=False).status_code, 200)  # criador (u1)
+        r = self.as_user(self.u2).patch(self.url, {"proximos_passos": "x" * 40}, format="json")
+        self.assertEqual(r.status_code, 403)
+        self.assertIn("criador", str(r.json()))
+        # o integrante enxerga as respostas e sabe que não pode editar; o criador pode
+        corpo = self.as_user(self.u2).get(self.url).json()
+        self.assertFalse(corpo["pode_editar"])
+        self.assertEqual(corpo["maior_dificuldade"], TEXTO)
+        self.assertTrue(self.as_user(self.u1).get(self.url).json()["pode_editar"])
+        # avaliador/professor/admin também só leem
+        self.assertFalse(self.as_user(self.admin).get(self.url).json()["pode_editar"])
+        self.assertEqual(self.as_user(self.prof).patch(self.url, {}, format="json").status_code, 403)
+
     def test_sem_peso_interno_respondeu_10_nao_respondeu_0(self):
         membros = [self.u1.id, self.u2.id]
         total, _ = pontuar(PreAvaliacao(projeto=self.projeto), membros)
