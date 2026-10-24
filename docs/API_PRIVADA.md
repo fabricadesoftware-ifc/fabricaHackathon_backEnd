@@ -225,6 +225,17 @@ A nota da pré-avaliação é **10** se a equipe registrou ao menos uma resposta
 
 Status, pré-avaliação (`pre_avaliacao_liberada`, `prazo_pre_avaliacao`) e demais dados seguem em `PATCH /api/edicoes/{id}/`.
 
+## Link de convite da equipe
+
+O mínimo de participantes **não** é exigido na inscrição (vale ao fechar as inscrições; o painel admin marca `abaixo_do_minimo`). Só o máximo barra.
+
+- `MinhaEquipe` ganha `link_convite` (só o criador: `id, token, url`), `minimo_participantes` e `maximo_participantes`.
+- `POST /api/inscricoes/{id}/link-convite/` gera (ou troca) o link reutilizável da equipe; `DELETE` desativa. Só o criador, em INSCRICAO.
+- `GET /api/convites/{token}/` (público) → `valido, motivo, equipe, edicao, criador`.
+- `POST /api/convites/{token}/aceitar/` (Participante logado) entra na equipe (só em INSCRICAO e se houver vaga).
+- `FRONTEND_URL` (env) monta a URL do link (`FRONTEND_URL/convite/<token>`).
+- `membros` na inscrição segue aceitando só e-mails de contas já cadastradas.
+
 ## Equipe da Fábrica (organizadora)
 
 Equipe marcada com `organizadora: true`: aparece nas listagens com marcação própria, mas **fica fora da avaliação** (não recebe notas, não tem nota final, não entra em ranking/resultados nem no limite de equipes da edição).

@@ -47,7 +47,7 @@ def _resolver_membros(edicao, emails, ignorar_equipe=None, ignorar_usuarios=()):
         vistos.add(email)
         usuario = User.objects.filter(email__iexact=email).first()
         if usuario is None:
-            erros.append(f"Nenhum usuário cadastrado com o e-mail {email}.")
+            erros.append(f"Nenhum usuário cadastrado com o e-mail {email}. Use o link de convite da equipe.")
             continue
         if usuario.pk in ignorar_usuarios:
             erros.append(f"O e-mail {email} já pertence a esta equipe.")
@@ -69,14 +69,10 @@ def _resolver_membros(edicao, emails, ignorar_equipe=None, ignorar_usuarios=()):
 
 
 def _validar_total(edicao, total):
+    """O máximo vale desde a inscrição. O mínimo só vale ao fechar as inscrições."""
     if total > edicao.maximo_participantes:
         raise ValidationError({
             'membros': f"A equipe pode ter no máximo {edicao.maximo_participantes} participantes (contando você); "
-                       f"foram informados {total}."
-        })
-    if total < edicao.minimo_participantes:
-        raise ValidationError({
-            'membros': f"A equipe precisa de no mínimo {edicao.minimo_participantes} participantes (contando você); "
                        f"foram informados {total}."
         })
 
@@ -145,12 +141,7 @@ def adicionar_membros(equipe, emails):
         _exigir_inscricao_aberta(edicao)
         atuais = list(equipe.participantes.values_list('user_id', flat=True))
         novos = _resolver_membros(edicao, emails, ignorar_equipe=equipe, ignorar_usuarios=atuais)
-        total = len(atuais) + len(novos)
-        if total > edicao.maximo_participantes:
-            raise ValidationError({
-                'membros': f"A equipe pode ter no máximo {edicao.maximo_participantes} participantes; "
-                           f"com estes e-mails ficaria com {total}."
-            })
+        _validar_total(edicao, len(atuais) + len(novos))
         for usuario in novos:
             ParticipanteEquipe.objects.create(user=usuario, equipe=equipe)
         return equipe
@@ -165,10 +156,6 @@ def remover_membro(equipe, usuario_id):
         vinculo = equipe.participantes.filter(user_id=usuario_id).first()
         if vinculo is None:
             raise ValidationError({'detail': 'Este usuário não faz parte da equipe.'})
-        if equipe.participantes.count() - 1 < edicao.minimo_participantes:
-            raise ValidationError({
-                'detail': f"A equipe precisa de no mínimo {edicao.minimo_participantes} participantes."
-            })
         vinculo.delete()
 
 

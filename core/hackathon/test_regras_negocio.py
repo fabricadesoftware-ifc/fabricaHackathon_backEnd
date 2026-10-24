@@ -294,20 +294,19 @@ class InscricaoTest(Base):
         self.assertIn('limite de 1 equipes', str(r.json()['edicao']))
         self.assertFalse(Equipe.objects.filter(nome_equipe='Alfa').exists())
 
-    def test_minimo_e_maximo_contando_o_criador(self):
-        r = self.inscrever(membros=[])
-        self.assertEqual(r.status_code, 400)
-        self.assertIn('mínimo 2', str(r.json()['membros']).replace('no mínimo', 'mínimo'))
+    def test_maximo_conta_o_criador_e_minimo_nao_barra_a_inscricao(self):
         r = self.inscrever(membros=['u2@t.com', 'u3@t.com', 'u4@t.com'])
         self.assertEqual(r.status_code, 400)
         self.assertIn('máximo 3', str(r.json()['membros']).replace('no máximo', 'máximo'))
+        # O mínimo só vale ao fechar as inscrições: dá para inscrever só o criador e completar depois pelo link.
+        self.assertEqual(self.inscrever(user=self.u4, membros=[], nome_equipe='Solo').status_code, 201)
         self.assertEqual(self.inscrever(membros=['u2@t.com', 'u3@t.com']).status_code, 201)
 
     def test_emails_invalidos(self):
         casos = {
-            'inexistente@t.com': 'Nenhum usuário cadastrado',
             'aval@t.com': 'não tem perfil de Participante',
             'prof@t.com': 'não tem perfil de Participante',
+            'inexistente@t.com': 'Nenhum usuário cadastrado',
             'u1@t.com': 'seu próprio e-mail',
         }
         for email, trecho in casos.items():
@@ -391,14 +390,13 @@ class GestaoEquipeTest(Base):
         r = c.post(self.url + 'membros/', {'membros': ['u4@t.com']}, format='json')
         self.assertEqual(r.status_code, 400)  # máximo 3
         self.assertEqual(c.delete(f'{self.url}membros/{self.u3.id}/').status_code, 200)
-        r = c.delete(f'{self.url}membros/{self.u2.id}/')
-        self.assertEqual(r.status_code, 400)  # mínimo 2
+        self.assertEqual(c.delete(f'{self.url}membros/{self.u2.id}/').status_code, 200)
         self.assertEqual(c.delete(f'{self.url}membros/{self.u1.id}/').status_code, 400)  # criador
 
-    def test_membro_pode_sair_se_nao_violar_minimo(self):
+    def test_membro_pode_sair(self):
         ParticipanteEquipe.objects.create(user=self.u3, equipe=self.equipe)
         self.assertEqual(self.as_user(self.u3).post(self.url + 'sair/').status_code, 204)
-        self.assertEqual(self.as_user(self.u2).post(self.url + 'sair/').status_code, 400)
+        self.assertEqual(self.as_user(self.u2).post(self.url + 'sair/').status_code, 204)
         self.assertEqual(self.as_user(self.u1).post(self.url + 'sair/').status_code, 403)
 
     def test_criador_exclui_equipe(self):

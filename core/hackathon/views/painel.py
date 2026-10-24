@@ -128,15 +128,17 @@ class PainelEquipesView(APIView):
         for equipe in equipes:
             projeto = equipe.projeto
             p = pre.get(projeto.id)
+            membros = list(equipe.participantes.all())
             itens.append({
                 "id": equipe.id,
                 "organizadora": equipe.organizadora,
                 "nome_equipe": equipe.nome_equipe,
+                "abaixo_do_minimo": len(membros) < edicao.minimo_participantes,
                 "tema": equipe.tema.descricao_tema if equipe.tema else None,
                 "criador": _nome(equipe.criador) if equipe.criador else None,
                 "membros": [
                     {"id": v.user_id, "nome": _nome(v.user), "email": v.user.email}
-                    for v in equipe.participantes.all()
+                    for v in membros
                 ],
                 "projeto": {
                     "id": projeto.id,

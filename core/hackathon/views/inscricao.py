@@ -14,6 +14,7 @@ from ..serializers.inscricao import (
     MembrosSerializer,
     MinhaEquipeSerializer,
 )
+from ..services import convites as servico_convites
 from ..services import inscricao as servico
 
 
@@ -30,7 +31,7 @@ class InscricaoViewSet(GenericViewSet):
         return (
             Equipe.objects.filter(participantes__user=self.request.user)
             .select_related('tema', 'edicao', 'projeto__edicao', 'criador')
-            .prefetch_related('participantes__user')
+            .prefetch_related('participantes__user', 'convites')
         )
 
     def _equipe_do_criador(self):
@@ -68,6 +69,16 @@ class InscricaoViewSet(GenericViewSet):
         serializer = MembrosSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         servico.adicionar_membros(equipe, serializer.validated_data['membros'])
+        return self._resposta(equipe)
+
+    @action(detail=True, methods=['post', 'delete'], url_path='link-convite')
+    def link_convite(self, request, pk=None):
+        """POST gera (ou troca) o link de convite da equipe; DELETE revoga. Só o criador."""
+        equipe = self._equipe_do_criador()
+        if request.method == 'POST':
+            servico_convites.gerar_link(equipe)
+        else:
+            servico_convites.revogar_link(equipe)
         return self._resposta(equipe)
 
     @action(detail=True, methods=['delete'], url_path=r'membros/(?P<usuario_id>\d+)')

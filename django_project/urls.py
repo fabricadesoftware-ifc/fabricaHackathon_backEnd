@@ -21,6 +21,7 @@ from core.hackathon.views import (
     CustomTokenObtainPairView,
 )
 from core.hackathon.views.registro import RegistroView, SolicitacaoPerfilViewSet
+from core.hackathon.views.convite import ConviteAceitarView, ConviteInfoView
 from core.hackathon.views.inscricao import InscricaoViewSet
 from core.hackathon.views.painel import (
     PainelAvaliadoresView,
@@ -72,6 +73,8 @@ urlpatterns = [
     path("api/painel/edicoes/<int:pk>/resultados/", PainelResultadosView.as_view(), name="painel-resultados"),
     path("api/painel/edicoes/<int:pk>/avaliadores/", PainelAvaliadoresView.as_view(), name="painel-avaliadores"),
     path("api/painel/edicoes/<int:pk>/avaliadores/<int:user_id>/", PainelAvaliadoresView.as_view(), name="painel-avaliador"),
+    path("api/convites/<str:token>/", ConviteInfoView.as_view(), name="convite-info"),
+    path("api/convites/<str:token>/aceitar/", ConviteAceitarView.as_view(), name="convite-aceitar"),
     path("api/me/", MeView.as_view(), name="me"),
     path("api/me/equipes/", MinhasEquipesView.as_view(), name="me-equipes"),
     path("api/me/projetos/", MeusProjetosView.as_view(), name="me-projetos"),

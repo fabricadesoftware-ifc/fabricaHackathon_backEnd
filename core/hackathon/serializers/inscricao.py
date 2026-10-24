@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 
 from ..models import Edicao, Equipe, Projeto, Tema, User
@@ -66,13 +67,27 @@ class MinhaEquipeSerializer(serializers.ModelSerializer):
     membros = serializers.SerializerMethodField()
     edicao_status = serializers.CharField(source='edicao.status', read_only=True)
     sou_criador = serializers.SerializerMethodField()
+    link_convite = serializers.SerializerMethodField()
+    minimo_participantes = serializers.IntegerField(source='edicao.minimo_participantes', read_only=True)
+    maximo_participantes = serializers.IntegerField(source='edicao.maximo_participantes', read_only=True)
 
     class Meta:
         model = Equipe
         fields = [
             'id', 'nome_equipe', 'edicao', 'edicao_status', 'tema_id', 'tema',
-            'criador', 'sou_criador', 'membros', 'projeto', 'organizadora',
+            'criador', 'sou_criador', 'membros', 'projeto', 'link_convite', 'organizadora',
+            'minimo_participantes', 'maximo_participantes',
         ]
+
+    def get_link_convite(self, equipe):
+        """Link reutilizável da equipe; só o criador o vê."""
+        request = self.context.get('request')
+        if not (request and equipe.criador_id == request.user.pk):
+            return None
+        link = next((c for c in equipe.convites.all() if c.ativo), None)
+        if link is None:
+            return None
+        return {'id': link.id, 'token': link.token, 'url': f"{settings.FRONTEND_URL}/convite/{link.token}"}
 
     def get_membros(self, equipe):
         return MembroSerializer([p.user for p in equipe.participantes.all()], many=True).data

@@ -249,3 +249,7 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+
+# Endereço público do front, usado nos links de convite de equipe.
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://hackifc.fabricadesoftware.ifc.edu.br").rstrip("/")

@@ -11,6 +11,7 @@ from .participanteEquipe import ParticipanteEquipe
 from .avaliadorEdicao import AvaliadorEdicao
 from .solicitacaoPerfil import SolicitacaoPerfil
 from .preAvaliacao import PreAvaliacao
+from .conviteEquipe import ConviteEquipe
 __all__ = [
     "Apoiador",
     "TipoEdicao",
@@ -25,4 +26,5 @@ __all__ = [
     "AvaliadorEdicao",
     "SolicitacaoPerfil",
     "PreAvaliacao",
+    "ConviteEquipe",
 ]
