@@ -3,11 +3,14 @@ from urllib.parse import urlparse
 from rest_framework import serializers
 
 from ..models import PreAvaliacao
+from .imagem import LimpaImagensAntigasMixin
 
 CAMPOS_LINK = ("organizacao_link", "arquitetura_link", "hospedagem_link")
 
 
-class PreAvaliacaoSerializer(serializers.ModelSerializer):
+class PreAvaliacaoSerializer(LimpaImagensAntigasMixin, serializers.ModelSerializer):
+    campos_imagem = ("arquivo_rfs_rnfs", "arquitetura_arquivo")
+
     class Meta:
         model = PreAvaliacao
         fields = [

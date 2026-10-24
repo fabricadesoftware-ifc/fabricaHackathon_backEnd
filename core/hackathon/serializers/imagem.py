@@ -27,7 +27,7 @@ class LimpaImagensAntigasMixin:
                 raise
             logger.exception("Falha ao gravar imagem (%s) no storage.", ", ".join(enviando))
             raise ValidationError({
-                enviando[0]: "Não foi possível salvar a imagem agora. Tente novamente em instantes ou use outra imagem."
+                enviando[0]: "Não foi possível salvar o arquivo agora. Tente novamente em instantes ou use outro arquivo."
             })
 
     def create(self, validated_data):
