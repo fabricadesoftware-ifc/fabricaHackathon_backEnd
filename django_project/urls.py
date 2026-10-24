@@ -26,6 +26,8 @@ from core.hackathon.views.painel import (
     PainelAvaliadoresView,
     PainelEdicaoView,
     PainelEdicoesView,
+    PainelEquipeFabricaView,
+    PainelEquipeMarcacaoView,
     PainelEquipesView,
     PainelResultadosView,
 )
@@ -65,6 +67,8 @@ urlpatterns = [
     path("api/painel/edicoes/", PainelEdicoesView.as_view(), name="painel-edicoes"),
     path("api/painel/edicoes/<int:pk>/", PainelEdicaoView.as_view(), name="painel-edicao"),
     path("api/painel/edicoes/<int:pk>/equipes/", PainelEquipesView.as_view(), name="painel-equipes"),
+    path("api/painel/edicoes/<int:pk>/equipe-fabrica/", PainelEquipeFabricaView.as_view(), name="painel-equipe-fabrica"),
+    path("api/painel/edicoes/<int:pk>/equipes/<int:equipe_id>/", PainelEquipeMarcacaoView.as_view(), name="painel-equipe-marcacao"),
     path("api/painel/edicoes/<int:pk>/resultados/", PainelResultadosView.as_view(), name="painel-resultados"),
     path("api/painel/edicoes/<int:pk>/avaliadores/", PainelAvaliadoresView.as_view(), name="painel-avaliadores"),
     path("api/painel/edicoes/<int:pk>/avaliadores/<int:user_id>/", PainelAvaliadoresView.as_view(), name="painel-avaliador"),

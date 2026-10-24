@@ -77,7 +77,7 @@ class MinhasAvaliacoesView(APIView):
             notas = {}
             for nota in Nota.objects.filter(avaliador=vinculo):
                 notas.setdefault(nota.projeto_id, {})[nota.criterio_id] = nota
-            projetos = Projeto.objects.filter(edicao=edicao).select_related('equipes').order_by('nome_projeto', 'id')
+            projetos = Projeto.objects.filter(edicao=edicao).exclude(equipes__organizadora=True).select_related('equipes').order_by('nome_projeto', 'id')
             for projeto in projetos:
                 feitas = notas.get(projeto.id, {})
                 pendentes = [c for c in criterios if c.id not in feitas]

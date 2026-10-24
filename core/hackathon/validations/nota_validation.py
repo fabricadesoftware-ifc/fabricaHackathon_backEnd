@@ -58,3 +58,16 @@ def validate_nota_unica(avaliador, projeto, criterio, instance=None):
         raise serializers.ValidationError(
             {"non_field_errors": ["Este critério já foi avaliado por este avaliador para este projeto."]}
         )
+
+
+def projeto_fora_da_avaliacao(projeto):
+    """True se o projeto é da equipe da Fábrica (organizadora), que não participa da avaliação."""
+    equipe = getattr(projeto, 'equipes', None) if projeto is not None else None
+    return bool(equipe is not None and equipe.organizadora)
+
+
+def validate_projeto_avaliavel(projeto):
+    if projeto_fora_da_avaliacao(projeto):
+        raise serializers.ValidationError(
+            {"projeto": "Este projeto é da equipe da Fábrica e não participa da avaliação."}
+        )
