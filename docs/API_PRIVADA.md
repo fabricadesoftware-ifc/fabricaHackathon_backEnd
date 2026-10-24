@@ -224,3 +224,14 @@ A nota da pré-avaliação é **10** se a equipe registrou ao menos uma resposta
 | DELETE | `/api/painel/edicoes/{id}/avaliadores/{user_id}/` | Desvincula (400 se já lançou notas) |
 
 Status, pré-avaliação (`pre_avaliacao_liberada`, `prazo_pre_avaliacao`) e demais dados seguem em `PATCH /api/edicoes/{id}/`.
+
+## Equipe da Fábrica (organizadora)
+
+Equipe marcada com `organizadora: true`: aparece nas listagens com marcação própria, mas **fica fora da avaliação** (não recebe notas, não tem nota final, não entra em ranking/resultados nem no limite de equipes da edição).
+
+Somente `ADMIN`:
+
+- `POST /api/painel/edicoes/{id}/equipe-fabrica/` — body `{nome_equipe, nome_projeto, descricao_projeto?, link_deploy_projeto?, membros?: [emails de participantes]}`. Cria projeto + equipe organizadora. Disponível até a edição ser finalizada.
+- `PATCH /api/painel/edicoes/{id}/equipes/{equipe_id}/` — body `{organizadora: bool}`. Marcar apaga as notas já dadas; desmarcar recalcula a nota final.
+
+APIs públicas e `/api/me/equipes/` expõem `organizadora` (projetos: `equipe_organizadora`).

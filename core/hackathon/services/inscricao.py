@@ -87,7 +87,7 @@ def criar_inscricao(criador, dados):
         edicao = _travar_edicao(dados['edicao'].pk)
         _exigir_inscricao_aberta(edicao)
 
-        if edicao.equipes.count() >= edicao.maximo_equipes:
+        if edicao.equipes.filter(organizadora=False).count() >= edicao.maximo_equipes:
             raise ValidationError({'edicao': f"A edição já atingiu o limite de {edicao.maximo_equipes} equipes."})
 
         tema = dados.get('tema')
