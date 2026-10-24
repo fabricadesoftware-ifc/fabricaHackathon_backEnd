@@ -182,8 +182,7 @@ Membros da equipe, administrador, professor e avaliadores da edição (somente l
   "opcoes": {
     "organizacao_metodo": [{ "valor": "KANBAN", "rotulo": "Kanban" }],
     "hospedagem_plataforma": [{ "valor": "FABROKU", "rotulo": "Fabroku" }],
-    "banco_plataforma": [{ "valor": "FABROKU_POSTGRES", "rotulo": "PostgreSQL do Fabroku" }],
-    "minimo_caracteres_textos": 30
+    "banco_plataforma": [{ "valor": "FABROKU_POSTGRES", "rotulo": "PostgreSQL do Fabroku" }]
   },
   "responsabilidades": [], "organizacao_metodo": "", "organizacao_link": "",
   "problema_entendido": "", "problema_explicacao": "", "maior_dificuldade": "", "proximos_passos": "",
@@ -195,35 +194,22 @@ Membros da equipe, administrador, professor e avaliadores da edição (somente l
 ```
 
 ### `PATCH /api/me/projetos/{projeto_id}/pre-avaliacao/` (também `PUT`; sempre parcial)
-Somente **membros da equipe**. Aceita `application/json` ou `multipart/form-data` (necessário para enviar arquivos; nesse caso mande `responsabilidades` como string JSON). Pode salvar por partes: a pontuação é recalculada a cada gravação e devolvida na resposta (`nota`, `detalhe_pontuacao`).
+Somente **membros da equipe**. Aceita `application/json` ou `multipart/form-data` (necessário para enviar arquivos; nesse caso mande `responsabilidades` como string JSON). Pode salvar por partes: a nota é recalculada a cada gravação e devolvida na resposta (`nota`, `detalhe_pontuacao`).
 
 | Campo | Regra |
 |---|---|
 | `responsabilidades` | lista `[{ "user": id, "area": "back" }]`; só integrantes da equipe, sem repetir, `area` de 1 a 60 caracteres |
 | `organizacao_metodo` | `KANBAN`, `LISTA`, `CONVERSA`, `OUTRO` |
 | `organizacao_link`, `arquitetura_link`, `hospedagem_link` | URL `http`/`https` |
-| `problema_entendido`, `problema_explicacao`, `maior_dificuldade`, `proximos_passos`, `hospedagem_justificativa`, `banco_justificativa` | texto; só pontua com no mínimo 30 caracteres |
-| `arquivo_rfs_rnfs` (obrigatório para pontuar o item), `arquitetura_arquivo` | arquivo até 10 MB: pdf, doc, docx, md, txt, png, jpg, jpeg, webp |
+| `problema_entendido`, `problema_explicacao`, `maior_dificuldade`, `proximos_passos`, `hospedagem_justificativa`, `banco_justificativa` | texto |
+| `arquivo_rfs_rnfs`, `arquitetura_arquivo` | arquivo até 10 MB: pdf, doc, docx, md, txt, png, jpg, jpeg, webp |
 | `hospedagem_plataforma` | `FABROKU`, `OUTRA`, `LOCAL` |
 | `banco_plataforma` | `FABROKU_POSTGRES`, `SUPABASE`, `NEON`, `RENDER`, `OUTRO`, `LOCAL` |
 
 `nota` e `detalhe_pontuacao` são somente leitura. Erros: `400` por campo; `403` se não for membro ou se o formulário estiver fechado.
 
-### Pontuação automática (0–10)
-5 seções de 2 pontos; os itens de uma seção dividem os pontos igualmente.
-
-| Seção | Itens |
-|---|---|
-| 1. Equipe e organização | área de **todos** os integrantes (1,0); método de organização (1,0) |
-| 2. Entendimento do problema | 4 respostas de texto (0,5 cada, mínimo de 30 caracteres) |
-| 3. Arquivos de arquitetura | arquivo de RFs/RNFs (1,0); arquivo **ou** link de arquitetura (1,0) |
-| 4. Aplicação hospedada | onde + link (1,0); justificativa (1,0) |
-| 5. Banco de dados | onde (1,0); justificativa (1,0) |
-
-- Respondeu/entregou = 100% do item; em branco = 0%.
-- **Local = 50% do item "onde/link"**: plataforma `LOCAL` ou link com `localhost`, `127.0.0.1`, IP de rede interna (10.x, 172.16–31.x, 192.168.x) ou nome interno (`.local`, `.internal`, sem domínio). Vale para a aplicação e para o banco. As justificativas não perdem pontos.
-- Sem o arquivo de RFs/RNFs: 0 só naquele item; o resto não é afetado.
-- `detalhe_pontuacao` traz seções, itens, pontos e o motivo de cada um (ex.: "aplicação local (50%)").
+### Pontuação (0 ou 10, sem pesos internos)
+A nota da pré-avaliação é **10** se a equipe registrou ao menos uma resposta/arquivo e **0** se não respondeu nada. Não há nota parcial por seção, item, tamanho de texto ou "local x hospedado". `detalhe_pontuacao` traz só `{ "total": "10.00", "respondeu": true }`. A nota final segue 90% avaliadores + 10% pré-avaliação.
 
 ## Painel do administrador (`/api/painel/`, somente ADMIN)
 
