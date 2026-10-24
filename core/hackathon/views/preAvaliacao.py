@@ -48,7 +48,11 @@ class PreAvaliacaoView(APIView):
     @staticmethod
     def _eh_criador(request, projeto):
         equipe = getattr(projeto, "equipes", None)
-        return bool(equipe is not None and equipe.criador_id == request.user.pk)
+        if equipe is None:
+            return False
+        if equipe.criador_id is None:  # equipe sem criador: qualquer integrante responde
+            return equipe.participantes.filter(user_id=request.user.pk).exists()
+        return equipe.criador_id == request.user.pk
 
     def _resposta(self, request, projeto, membros, pre):
         edicao = projeto.edicao
