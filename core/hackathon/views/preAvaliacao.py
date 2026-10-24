@@ -9,7 +9,7 @@ from ..models import AvaliadorEdicao, PreAvaliacao, Projeto
 from ..permissions import is_admin, is_professor
 from ..serializers.preAvaliacao import PreAvaliacaoSerializer
 from ..services.pre_avaliacao import (
-    MIN_CARACTERES, motivo_fechada, pre_avaliacao_aberta, salvar_com_pontuacao,
+    motivo_fechada, pre_avaliacao_aberta, salvar_com_pontuacao,
 )
 
 
@@ -18,7 +18,6 @@ def _opcoes():
         "organizacao_metodo": [{"valor": v, "rotulo": r} for v, r in PreAvaliacao.Organizacao.choices],
         "hospedagem_plataforma": [{"valor": v, "rotulo": r} for v, r in PreAvaliacao.Hospedagem.choices],
         "banco_plataforma": [{"valor": v, "rotulo": r} for v, r in PreAvaliacao.Banco.choices],
-        "minimo_caracteres_textos": MIN_CARACTERES,
     }
 
 

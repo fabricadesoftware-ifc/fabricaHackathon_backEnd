@@ -90,55 +90,22 @@ class PreAvaliacaoTest(Base):
         self.assertEqual(r.status_code, 200, r.content)
         self.assertEqual(r.json()["nota"], "10.00")  # RFs por arquivo, arquitetura por link, nada local
 
-    def test_pontuacao_item_a_item(self):
-        pre = PreAvaliacao(projeto=self.projeto, **{
-            k: v for k, v in self.completo().items()
-        })
+    def test_sem_peso_interno_respondeu_10_nao_respondeu_0(self):
         membros = [self.u1.id, self.u2.id]
-        total, det = pontuar(pre, membros)
-        # sem arquivo de RFs/RNFs: perde só aquele item (1 ponto)
-        self.assertEqual(total, Decimal("9.00"))
-        rfs = [i for s in det["secoes"] for i in s["itens"] if i["id"] == "rfs_rnfs"][0]
-        self.assertEqual(rfs["pontos"], "0.00")
-
-    def test_em_branco_vale_zero(self):
-        total, _ = pontuar(PreAvaliacao(projeto=self.projeto), [self.u1.id, self.u2.id])
+        total, _ = pontuar(PreAvaliacao(projeto=self.projeto), membros)
         self.assertEqual(total, Decimal("0.00"))
+        # qualquer resposta registrada vale 10: não há nota parcial por item/seção
+        total, _ = pontuar(PreAvaliacao(projeto=self.projeto, problema_entendido="curto"), membros)
+        self.assertEqual(total, Decimal("10.00"))
+        # mesmo tudo local e sem arquivos: vale 10
+        pre = PreAvaliacao(projeto=self.projeto, hospedagem_plataforma="LOCAL", banco_plataforma="LOCAL")
+        self.assertEqual(pontuar(pre, membros)[0], Decimal("10.00"))
 
-    def test_local_vale_metade_do_item(self):
-        base = self.completo()
-        pre = PreAvaliacao(projeto=self.projeto, **base)
-        pre.hospedagem_link = "http://localhost:3000"
-        pre.banco_plataforma = "LOCAL"
-        total, _ = pontuar(pre, [self.u1.id, self.u2.id])
-        # 9.00 (sem RFs) - 0.5 (aplicação local) - 0.5 (banco local) = 8.00
-        self.assertEqual(total, Decimal("8.00"))
-        pre.hospedagem_plataforma = "LOCAL"
-        pre.hospedagem_link = ""
-        total, _ = pontuar(pre, [self.u1.id, self.u2.id])
-        self.assertEqual(total, Decimal("8.00"))
-
-    def test_resposta_curta_nao_conta_e_integrante_sem_area_perde_o_item(self):
-        pre = PreAvaliacao(projeto=self.projeto, **self.completo(problema_entendido="curto"))
-        total, _ = pontuar(pre, [self.u1.id, self.u2.id])
-        self.assertEqual(total, Decimal("8.50"))  # 9.00 - 0.5
-        pre.responsabilidades = [{"user": self.u1.id, "area": "back"}]
-        total, _ = pontuar(pre, [self.u1.id, self.u2.id])
-        self.assertEqual(total, Decimal("7.50"))
-
-    def test_formulario_perfeito_via_api_vale_10(self):
-        r = self.enviar(corpo=self.completo(arquitetura_link=""), arquivos=True)
+    def test_formulario_parcial_via_api_vale_10(self):
+        r = self.as_user(self.u1).patch(self.url, {"organizacao_metodo": "KANBAN"}, format="json")
         self.assertEqual(r.status_code, 200, r.content)
-        # sem arquivo e sem link de arquitetura => perde 1 ponto
-        self.assertEqual(r.json()["nota"], "9.00")
-        r = self.as_user(self.u2).patch(
-            self.url,
-            {"arquitetura_arquivo": SimpleUploadedFile("arq.pdf", b"%PDF-1.4 x", content_type="application/pdf")},
-            format="multipart",
-        )
         self.assertEqual(r.json()["nota"], "10.00")
 
-    # --- permissões e prazo -------------------------------------------
     def test_so_membros_escrevem(self):
         for user in (self.u3, self.prof, self.admin, self.aval):
             self.assertEqual(self.as_user(user).patch(self.url, {}, format="json").status_code, 403)
@@ -208,9 +175,8 @@ class PreAvaliacaoTest(Base):
         self.assertIn("Formato", str(r.json()))
 
     def test_nota_e_pontuacao_nao_sao_editaveis(self):
-        self.enviar(arquivos=False)
         self.as_user(self.u1).patch(self.url, {"nota": "10.00"}, format="json")
-        self.assertNotEqual(PreAvaliacao.objects.get(projeto=self.projeto).nota, Decimal("10.00"))
+        self.assertEqual(PreAvaliacao.objects.get(projeto=self.projeto).nota, Decimal("0.00"))
 
     # --- nota final ----------------------------------------------------
     def test_nota_final_90_avaliadores_mais_10_pre_avaliacao(self):
