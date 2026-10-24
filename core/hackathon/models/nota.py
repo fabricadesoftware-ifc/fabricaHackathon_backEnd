@@ -20,6 +20,8 @@ class Nota(models.Model):
 
     def clean(self):
         errors = {}
+        if self.projeto_id and getattr(self.projeto, 'equipes', None) is not None and self.projeto.equipes.organizadora:
+            errors['projeto'] = "Este projeto é da equipe da Fábrica e não participa da avaliação."
         if self.avaliador_id and self.projeto_id:
             if self.avaliador.edicao_id != self.projeto.edicao_id:
                 errors['avaliador'] = "O avaliador não pertence à mesma edição do projeto avaliado."

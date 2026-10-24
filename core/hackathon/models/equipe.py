@@ -12,6 +12,12 @@ class Equipe(models.Model):
     tema = models.ForeignKey(Tema, on_delete=models.PROTECT, related_name="equipes", blank=True, null=True)
     projeto = models.OneToOneField(Projeto, on_delete=models.PROTECT, related_name="equipes", blank=False, null=False)
     criador = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="equipes_criadas", blank=True, null=True)
+    # Equipe da Fábrica (organizadora): aparece com marcação própria e NÃO participa da avaliação
+    # (sem notas, sem nota final, fora do ranking e do limite de equipes).
+    organizadora = models.BooleanField(
+        "Equipe da Fábrica (fora da avaliação)", default=False,
+        help_text="Marque para equipes da organização: não são avaliadas nem entram no ranking.",
+    )
     
     def clean(self):
         if self.pk and self.edicao_id:
