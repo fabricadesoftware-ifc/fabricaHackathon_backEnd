@@ -112,6 +112,18 @@ class PreAvaliacaoTest(Base):
         self.assertEqual(r.status_code, 200, r.content)
         self.assertFalse(self.as_user(self.admin).get(self.url).json()["pode_editar"])
 
+    def test_envia_md_e_png_e_falha_de_storage_vira_400(self):
+        from unittest import mock
+        md = SimpleUploadedFile("rfs.md", b"# requisitos", content_type="text/markdown")
+        png = SimpleUploadedFile("arq.png", b"\x89PNG\r\n\x1a\n" + b"0" * 64, content_type="image/png")
+        r = self.as_user(self.u1).patch(self.url, {"arquivo_rfs_rnfs": md, "arquitetura_arquivo": png}, format="multipart")
+        self.assertEqual(r.status_code, 200, r.content)
+        md2 = SimpleUploadedFile("outro.md", b"# x", content_type="text/markdown")
+        with mock.patch("django.core.files.storage.FileSystemStorage._save", side_effect=RuntimeError("cloud off")):
+            r = self.as_user(self.u1).patch(self.url, {"arquivo_rfs_rnfs": md2}, format="multipart")
+        self.assertEqual(r.status_code, 400, r.content)
+        self.assertIn("arquivo_rfs_rnfs", r.json())
+
     def test_sem_peso_interno_respondeu_10_nao_respondeu_0(self):
         membros = [self.u1.id, self.u2.id]
         total, _ = pontuar(PreAvaliacao(projeto=self.projeto), membros)
