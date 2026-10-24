@@ -25,7 +25,7 @@ class PreAvaliacaoView(APIView):
     """
     Formulário de pré-avaliação do projeto (10% da nota final).
     GET: membros da equipe, administrador, professor e avaliadores da edição.
-    PATCH/PUT: apenas membros da equipe, com a pré-avaliação liberada, no prazo e a edição em andamento.
+    PATCH/PUT: apenas o criador da equipe (os demais integrantes só visualizam), com a pré-avaliação liberada, no prazo e a edição em andamento.
     """
 
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -45,6 +45,11 @@ class PreAvaliacaoView(APIView):
             raise PermissionDenied("Você não tem acesso à pré-avaliação deste projeto.")
         return projeto, membros, eh_membro
 
+    @staticmethod
+    def _eh_criador(request, projeto):
+        equipe = getattr(projeto, "equipes", None)
+        return bool(equipe is not None and equipe.criador_id == request.user.pk)
+
     def _resposta(self, request, projeto, membros, pre):
         edicao = projeto.edicao
         dados = PreAvaliacaoSerializer(
@@ -56,6 +61,7 @@ class PreAvaliacaoView(APIView):
             "aberta": pre_avaliacao_aberta(edicao),
             "motivo_fechada": motivo_fechada(edicao),
             "liberada": edicao.pre_avaliacao_liberada,
+            "pode_editar": self._eh_criador(request, projeto),
             "prazo": edicao.prazo_pre_avaliacao,
             "preenchida": pre is not None,
             "integrantes": [
@@ -74,7 +80,9 @@ class PreAvaliacaoView(APIView):
     def patch(self, request, projeto_id):
         projeto, membros, eh_membro = self._carregar(request, projeto_id)
         if not eh_membro:
-            raise PermissionDenied("Apenas integrantes da equipe podem preencher a pré-avaliação.")
+            raise PermissionDenied("Apenas integrantes da equipe podem acessar a pré-avaliação.")
+        if not self._eh_criador(request, projeto):
+            raise PermissionDenied("Só o criador da equipe responde a pré-avaliação; os demais integrantes apenas visualizam.")
         if not pre_avaliacao_aberta(projeto.edicao):
             raise PermissionDenied(motivo_fechada(projeto.edicao))
         pre, _ = PreAvaliacao.objects.select_for_update().get_or_create(projeto=projeto)
